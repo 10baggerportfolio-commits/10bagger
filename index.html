@@ -1323,10 +1323,9 @@ body {
 
 <script>
 // ─── API KEYS ────────────────────────────────────────────────
-const TD_KEY    = '6fb71d7bb63848138494fa3676004754'; // Twelve Data (precio)
-const FMP_KEY   = 'UfMwGk9iqXJuR8y6DYPgHX8nk2UUfAct'; // FMP (fundamentales)
-const PROXY     = 'https://10bagger-proxy.10baggerportfolio.workers.dev/?url=';
-const TD_BASE   = 'https://api.twelvedata.com';
+const TD_KEY  = '6fb71d7bb63848138494fa3676004754'; // Twelve Data (precio)
+const FMP_KEY = 'UfMwGk9iqXJuR8y6DYPgHX8nk2UUfAct'; // FMP (profile)
+const PROXY   = 'https://10bagger-proxy.10baggerportfolio.workers.dev/?url=';
 
 // ─── EODHD ticker map (europeas necesitan sufijo) ─────────────
 const EODHD_MAP = {
@@ -1356,7 +1355,7 @@ function nav(id) {
   window.scrollTo(0,0);
 }
 
-// ─── FETCH PRICE (Twelve Data) ───────────────────────────────
+// ─── FETCH PRICE (Yahoo Finance) ─────────────────────────────
 async function fetchPrice(ticker) {
   const data = await tdQuote(ticker);
   if (!data || data.status === 'error') throw new Error('Ticker no encontrado: ' + ticker);
@@ -1384,37 +1383,19 @@ async function proxyFetch(url) {
   return await r.json();
 }
 
-// ─── FMP STABLE FETCHERS (plan gratuito) ─────────────────────
-async function fmpFetch(endpoint, params={}) {
-  const url = 'https://financialmodelingprep.com/stable/' + endpoint + '?' + new URLSearchParams({...params, apikey: FMP_KEY});
-  try { return await proxyFetch(url); } catch(e) { console.warn('FMP error:', e.message); return null; }
+// ─── TWELVE DATA (precio) ────────────────────────────────────
+async function tdQuote(ticker) {
+  const url = 'https://api.twelvedata.com/quote?symbol=' + ticker + '&apikey=' + TD_KEY;
+  try { return await proxyFetch(url); } catch(e) { return null; }
 }
 
+// ─── FMP STABLE (profile gratuito) ───────────────────────────
 async function fmpProfile(ticker) {
-  const d = await fmpFetch('profile', { symbol: ticker });
-  return Array.isArray(d) ? d[0] : d;
-}
-
-async function fmpRatios(ticker) {
-  const d = await fmpFetch('ratios', { symbol: ticker, period: 'annual', limit: 1 });
-  return Array.isArray(d) ? d[0] : d;
-}
-
-async function fmpIncome(ticker) {
-  return await fmpFetch('income-statement', { symbol: ticker, period: 'annual', limit: 5 });
-}
-
-async function fmpCashflow(ticker) {
-  return await fmpFetch('cash-flow-statement', { symbol: ticker, period: 'annual', limit: 5 });
-}
-
-async function fmpBalance(ticker) {
-  const d = await fmpFetch('balance-sheet-statement', { symbol: ticker, period: 'annual', limit: 1 });
-  return Array.isArray(d) ? d[0] : d;
-}
-
-async function fmpEstimates(ticker) {
-  return await fmpFetch('analyst-estimates', { symbol: ticker, limit: 3 });
+  const url = 'https://financialmodelingprep.com/stable/profile?symbol=' + ticker + '&apikey=' + FMP_KEY;
+  try {
+    const d = await proxyFetch(url);
+    return Array.isArray(d) ? d[0] : d;
+  } catch(e) { return null; }
 }
 
 // ─── SCORING ENGINE (10 criterios ponderados) ─────────────────
@@ -1485,84 +1466,34 @@ async function analyze(ticker) {
     const changeColor = changeP >= 0 ? 'var(--green)' : 'var(--red)';
     const changeArrow = changeP >= 0 ? '▲' : '▼';
 
-    // 2. Fundamentales (FMP stable — plan gratuito)
+    // 2. Fundamentales — profile gratuito FMP
+    // Criterios de ingresos/FCF/balance requieren FMP Starter (14/mes)
     let profile = null, ratios = null, income = [];
     let cashflow = [], balance = null, insider = [], estimates = [];
 
     try {
-      const [profData, ratiosData, incData, cashData, balData, estData] = await Promise.all([
-        fmpProfile(ticker),
-        fmpRatios(ticker),
-        fmpIncome(ticker),
-        fmpCashflow(ticker),
-        fmpBalance(ticker),
-        fmpEstimates(ticker)
-      ]);
-
-      // Profile
+      const profData = await fmpProfile(ticker);
       if (profData && profData.symbol) {
-        const range = profData.range?.split('-') || [];
+        const range = profData.range ? profData.range.split('-') : [];
         profile = {
-          companyNameFull:  profData.companyName  || ticker,
-          companyName:      profData.companyName  || ticker,
-          symbol:           ticker,
-          exchangeShortName: profData.exchange    || '—',
-          sector:           profData.sector       || '—',
-          industry:         profData.industry     || '—',
-          mktCap:           profData.marketCap    || null,
-          beta:             profData.beta         || null,
-          '52WeekLow':      range[0]?.trim()      || '—',
-          '52WeekHigh':     range[1]?.trim()      || '—',
+          companyNameFull:   profData.companyName || ticker,
+          companyName:       profData.companyName || ticker,
+          symbol:            ticker,
+          exchangeShortName: profData.exchange    || '-',
+          sector:            profData.sector      || '-',
+          industry:          profData.industry    || '-',
+          mktCap:            profData.marketCap   || null,
+          beta:              profData.beta        || null,
+          '52WeekLow':       (range[0] || '').trim() || '-',
+          '52WeekHigh':      (range[1] || '').trim() || '-',
           insidersOwnershipPercentage: null,
+          description:       profData.description || '',
+          ceo:               profData.ceo         || '-',
+          employees:         profData.fullTimeEmployees || '-',
         };
       }
-
-      // Ratios
-      if (ratiosData) {
-        ratios = {
-          returnOnEquityTTM: ratiosData.returnOnEquity || ratiosData.returnOnEquityTTM || null,
-        };
-      }
-
-      // Income statements
-      if (Array.isArray(incData)) {
-        income = incData.slice(0,5).map(r => ({
-          revenue: r.revenue       || 0,
-          ebitda:  r.ebitda        || 0,
-          eps:     r.eps           || null,
-          weightedAverageShsOut: r.weightedAverageShsOut || 0,
-          date:    r.date          || '',
-        }));
-      }
-
-      // Cashflow
-      if (Array.isArray(cashData)) {
-        cashflow = cashData.slice(0,5).map(r => ({
-          freeCashFlow:      r.freeCashFlow        || 0,
-          operatingCashFlow: r.operatingCashFlow   || 0,
-          capitalExpenditures: r.capitalExpenditure || 0,
-        }));
-      }
-
-      // Balance sheet
-      if (balData && balData.cashAndCashEquivalents !== undefined) {
-        balance = {
-          cashAndShortTermInvestments: balData.cashAndCashEquivalents || 0,
-          totalDebt: (balData.shortTermDebt || 0) + (balData.longTermDebt || 0),
-        };
-      }
-
-      // Analyst estimates
-      if (Array.isArray(estData) && estData.length) {
-        estimates = estData.map(e => ({
-          estimatedEpsAvg:     e.estimatedEpsAvg     || null,
-          estimatedRevenueAvg: e.estimatedRevenueAvg || null,
-          estimatedEbitdaAvg:  e.estimatedEbitdaAvg  || null,
-        }));
-      }
-
     } catch(e) {
-      console.warn('FMP fundamentals error:', e.message);
+      console.warn('FMP profile error:', e.message);
     }
 
     // 3. Calcular criterios con datos reales (o simulados si no hay FMP)
@@ -1858,7 +1789,7 @@ function renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeC
         <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">
           <span style="font-family:var(--mono);font-size:28px;font-weight:500">${priceStr}</span>
           <span style="font-family:var(--mono);font-size:12px;color:${changeColor}">${changeArrow} ${changePct}</span>
-          <span id="price-source-label" style="font-family:var(--mono);font-size:10px;color:var(--text-3)">precio real · Twelve Data + FMP</span>
+          <span id="price-source-label" style="font-family:var(--mono);font-size:10px;color:var(--text-3)">precio real · Twelve Data</span>
         </div>
         <div style="display:flex;gap:20px;font-family:var(--mono);font-size:10px;color:var(--text-3);flex-wrap:wrap">
           <span>Cap: <span style="color:var(--text)">${mktCap}</span></span>
