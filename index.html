@@ -1323,9 +1323,9 @@ body {
 
 <script>
 // ─── API KEYS ────────────────────────────────────────────────
-const AV_KEY    = 'KUSWW9JKCRIQFYUY'; // Alpha Vantage
+const TD_KEY    = '6fb71d7bb63848138494fa3676004754'; // Twelve Data
 const PROXY     = 'https://10bagger-proxy.10baggerportfolio.workers.dev/?url=';
-const AV_BASE   = 'https://www.alphavantage.co/query';
+const TD_BASE   = 'https://api.twelvedata.com';
 
 // ─── EODHD ticker map (europeas necesitan sufijo) ─────────────
 const EODHD_MAP = {
@@ -1355,24 +1355,23 @@ function nav(id) {
   window.scrollTo(0,0);
 }
 
-// ─── FETCH PRICE (Alpha Vantage) ─────────────────────────────
+// ─── FETCH PRICE (Twelve Data) ───────────────────────────────
 async function fetchPrice(ticker) {
-  const data = await avQuote(ticker);
-  if (!data) throw new Error('No se pudo obtener precio para ' + ticker);
-  const q = data['Global Quote'];
-  if (!q || !q['05. price']) throw new Error('Ticker no encontrado: ' + ticker);
-  const price     = parseFloat(q['05. price']);
-  const prevClose = parseFloat(q['08. previous close']);
-  const changeP   = parseFloat(q['10. change percent']?.replace('%','')) || 0;
+  const data = await tdQuote(ticker);
+  if (!data || data.status === 'error') throw new Error('Ticker no encontrado: ' + ticker);
+  const price     = parseFloat(data.close);
+  const prevClose = parseFloat(data.previous_close);
+  const changeP   = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
   return {
     close:         price,
     previousClose: prevClose,
     change_p:      changeP,
-    open:          parseFloat(q['02. open']),
-    high:          parseFloat(q['03. high']),
-    low:           parseFloat(q['04. low']),
-    volume:        parseInt(q['06. volume']),
-    source:        'Alpha Vantage'
+    open:          parseFloat(data.open),
+    high:          parseFloat(data.high),
+    low:           parseFloat(data.low),
+    volume:        parseInt(data.volume),
+    exchange:      data.exchange,
+    source:        'Twelve Data'
   };
 }
 
@@ -1384,34 +1383,34 @@ async function proxyFetch(url) {
   return await r.json();
 }
 
-// ─── ALPHA VANTAGE FETCHERS ──────────────────────────────────
-async function avFetch(params) {
-  const url = AV_BASE + '?' + new URLSearchParams({...params, apikey: AV_KEY});
-  try { return await proxyFetch(url); } catch(e) { console.warn('AV error:', e.message); return null; }
+// ─── TWELVE DATA FETCHERS ────────────────────────────────────
+async function tdFetch(endpoint, params={}) {
+  const url = TD_BASE + endpoint + '?' + new URLSearchParams({...params, apikey: TD_KEY});
+  try { return await proxyFetch(url); } catch(e) { console.warn('TD error:', e.message); return null; }
 }
 
-async function avQuote(ticker) {
-  return await avFetch({ function: 'GLOBAL_QUOTE', symbol: ticker });
+async function tdQuote(ticker) {
+  return await tdFetch('/quote', { symbol: ticker });
 }
 
-async function avOverview(ticker) {
-  return await avFetch({ function: 'OVERVIEW', symbol: ticker });
+async function tdProfile(ticker) {
+  return await tdFetch('/profile', { symbol: ticker });
 }
 
-async function avIncome(ticker) {
-  return await avFetch({ function: 'INCOME_STATEMENT', symbol: ticker });
+async function tdStatistics(ticker) {
+  return await tdFetch('/statistics', { symbol: ticker });
 }
 
-async function avCashflow(ticker) {
-  return await avFetch({ function: 'CASH_FLOW', symbol: ticker });
+async function tdIncomeStatement(ticker) {
+  return await tdFetch('/income_statement', { symbol: ticker, period: 'annual', outputsize: 5 });
 }
 
-async function avBalance(ticker) {
-  return await avFetch({ function: 'BALANCE_SHEET', symbol: ticker });
+async function tdCashFlow(ticker) {
+  return await tdFetch('/cash_flow_statement', { symbol: ticker, period: 'annual', outputsize: 5 });
 }
 
-async function avEarnings(ticker) {
-  return await avFetch({ function: 'EARNINGS', symbol: ticker });
+async function tdBalanceSheet(ticker) {
+  return await tdFetch('/balance_sheet', { symbol: ticker, period: 'annual', outputsize: 1 });
 }
 
 // ─── SCORING ENGINE (10 criterios ponderados) ─────────────────
@@ -1482,84 +1481,85 @@ async function analyze(ticker) {
     const changeColor = changeP >= 0 ? 'var(--green)' : 'var(--red)';
     const changeArrow = changeP >= 0 ? '▲' : '▼';
 
-    // 2. Fundamentales (Alpha Vantage) — gratis con key
+    // 2. Fundamentales (Twelve Data) — gratis 800 calls/día
     let profile = null, ratios = null, income = [];
     let cashflow = [], balance = null, insider = [], estimates = [];
 
     try {
-      const [overviewData, incomeData, cashData, balData, earningsData] = await Promise.all([
-        avOverview(ticker),
-        avIncome(ticker),
-        avCashflow(ticker),
-        avBalance(ticker),
-        avEarnings(ticker)
+      const [profData, statsData, incData, cashData, balData] = await Promise.all([
+        tdProfile(ticker),
+        tdStatistics(ticker),
+        tdIncomeStatement(ticker),
+        tdCashFlow(ticker),
+        tdBalanceSheet(ticker)
       ]);
 
-      // Profile from overview
-      if (overviewData && overviewData.Symbol) {
-        const ov = overviewData;
+      // Profile
+      if (profData && !profData.status) {
         profile = {
-          companyNameFull:          ov.Name || ticker,
-          companyName:              ov.Name || ticker,
-          symbol:                   ticker,
-          exchangeShortName:        ov.Exchange || '—',
-          sector:                   ov.Sector   || '—',
-          industry:                 ov.Industry || '—',
-          mktCap:                   parseFloat(ov.MarketCapitalization) || null,
-          beta:                     parseFloat(ov.Beta) || null,
-          '52WeekLow':              ov['52WeekLow']  || '—',
-          '52WeekHigh':             ov['52WeekHigh'] || '—',
-          insidersOwnershipPercentage: parseFloat(ov.PercentInsiders) / 100 || null,
-          peRatioTTM:               parseFloat(ov.PERatio) || null,
-          forwardPE:                parseFloat(ov.ForwardPE) || null,
-          eps:                      parseFloat(ov.EPS) || null,
-          roe:                      parseFloat(ov.ReturnOnEquityTTM) || null,
-        };
-
-        ratios = {
-          returnOnEquityTTM: parseFloat(ov.ReturnOnEquityTTM) || null,
+          companyNameFull:  profData.name        || ticker,
+          companyName:      profData.name        || ticker,
+          symbol:           ticker,
+          exchangeShortName: profData.exchange   || '—',
+          sector:           profData.sector      || '—',
+          industry:         profData.industry    || '—',
+          mktCap:           parseFloat(profData.market_cap) || null,
+          beta:             parseFloat(profData.beta)       || null,
+          '52WeekLow':      profData['52_week_low']         || '—',
+          '52WeekHigh':     profData['52_week_high']        || '—',
         };
       }
 
-      // Income statements (annual)
-      if (incomeData?.annualReports) {
-        income = incomeData.annualReports.slice(0,5).map(r => ({
-          revenue:               parseFloat(r.totalRevenue)              || 0,
-          ebitda:                parseFloat(r.ebitda)                    || 0,
-          eps:                   parseFloat(r.reportedEPS)               || null,
-          weightedAverageShsOut: parseFloat(r.commonStockSharesOutstanding) || 0,
-          date:                  r.fiscalDateEnding || '',
+      // Statistics (ROE, insider %, forward PE)
+      if (statsData?.statistics) {
+        const st = statsData.statistics;
+        const fin = st.financials || {};
+        const sh  = st.stock      || {};
+        if (!profile) profile = { companyName: ticker, symbol: ticker, exchangeShortName:'—', sector:'—', industry:'—' };
+        profile.insidersOwnershipPercentage = parseFloat(sh.percent_held_by_insiders?.fmt) / 100 || null;
+        profile.forwardPE = parseFloat(fin.forward_pe?.fmt) || null;
+        ratios = {
+          returnOnEquityTTM: parseFloat(fin.return_on_equity?.fmt) || null,
+        };
+      }
+
+      // Income statements
+      if (incData?.income_statement) {
+        income = incData.income_statement.slice(0,5).map(r => ({
+          revenue: parseFloat(r.total_revenue) || 0,
+          ebitda:  parseFloat(r.ebitda)        || 0,
+          eps:     parseFloat(r.eps_diluted)   || null,
+          weightedAverageShsOut: parseFloat(r.weighted_average_shares) || 0,
+          date:    r.fiscal_date || '',
         }));
       }
 
-      // Cashflow statements (annual)
-      if (cashData?.annualReports) {
-        cashflow = cashData.annualReports.slice(0,5).map(r => ({
-          freeCashFlow:        (parseFloat(r.operatingCashflow) || 0) - (parseFloat(r.capitalExpenditures) || 0),
-          operatingCashFlow:   parseFloat(r.operatingCashflow)   || 0,
-          capitalExpenditures: parseFloat(r.capitalExpenditures) || 0,
+      // Cashflow
+      if (cashData?.cash_flow_statement) {
+        cashflow = cashData.cash_flow_statement.slice(0,5).map(r => ({
+          freeCashFlow:      parseFloat(r.free_cash_flow)           || 0,
+          operatingCashFlow: parseFloat(r.operating_cash_flow)      || 0,
+          capitalExpenditures: parseFloat(r.capital_expenditures)   || 0,
         }));
       }
 
       // Balance sheet
-      if (balData?.annualReports?.[0]) {
-        const b = balData.annualReports[0];
+      if (balData?.balance_sheet?.[0]) {
+        const b = balData.balance_sheet[0];
         balance = {
-          cashAndShortTermInvestments: parseFloat(b.cashAndCashEquivalentsAtCarryingValue) || 0,
-          totalDebt: (parseFloat(b.shortTermDebt) || 0) + (parseFloat(b.longTermDebt) || 0),
+          cashAndShortTermInvestments: parseFloat(b.cash_and_cash_equivalents) || 0,
+          totalDebt: (parseFloat(b.short_term_debt) || 0) + (parseFloat(b.long_term_debt) || 0),
         };
       }
 
-      // Estimates from earnings
-      if (earningsData?.annualEarnings) {
-        const fwdEPS = profile?.eps || null;
-        if (fwdEPS) {
-          estimates = [{ estimatedEpsAvg: fwdEPS, estimatedRevenueAvg: null }];
-        }
+      // Forward estimates — use forward PE * current EPS
+      if (profile?.forwardPE && priceData?.close) {
+        const impliedEPS = priceData.close / profile.forwardPE;
+        estimates = [{ estimatedEpsAvg: impliedEPS, estimatedRevenueAvg: null }];
       }
 
     } catch(e) {
-      console.warn('Alpha Vantage fundamentals error:', e.message);
+      console.warn('Twelve Data fundamentals error:', e.message);
     }
 
     // 3. Calcular criterios con datos reales (o simulados si no hay FMP)
@@ -1855,7 +1855,7 @@ function renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeC
         <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">
           <span style="font-family:var(--mono);font-size:28px;font-weight:500">${priceStr}</span>
           <span style="font-family:var(--mono);font-size:12px;color:${changeColor}">${changeArrow} ${changePct}</span>
-          <span id="price-source-label" style="font-family:var(--mono);font-size:10px;color:var(--text-3)">precio real · Alpha Vantage</span>
+          <span id="price-source-label" style="font-family:var(--mono);font-size:10px;color:var(--text-3)">precio real · Twelve Data</span>
         </div>
         <div style="display:flex;gap:20px;font-family:var(--mono);font-size:10px;color:var(--text-3);flex-wrap:wrap">
           <span>Cap: <span style="color:var(--text)">${mktCap}</span></span>
