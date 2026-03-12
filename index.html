@@ -1531,17 +1531,16 @@ async function analyze(ticker) {
         }
       }
 
-      if (balData && balData.cash) {
+      if (balData) {
         balance = {
-          cashAndShortTermInvestments: balData.cash[1] || 0,
-          totalDebt: balData.totalDebt ? balData.totalDebt[1] : 0,
+          cashAndShortTermInvestments: balData.totalcash ? (balData.totalcash[1] || 0) : 0,
+          totalDebt: balData.debt ? (balData.debt[1] || 0) : 0,
+          netCashDirect: balData.netCash ? balData.netCash[1] : null,
         };
       }
 
       if (ratData) {
         if (ratData.roe) ratios = { returnOnEquityTTM: ratData.roe[1] || null };
-        if (ratData.insiderOwnership && profile)
-          profile.insidersOwnershipPercentage = ratData.insiderOwnership[1] || null;
       }
 
     } catch(e) {
@@ -1608,10 +1607,14 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
     if (s1 > 0) dilution = (s0 - s1) / s1;
   }
 
-  // Net cash: cash - total debt
+  // Net cash: usar netCash directo de SA o calcular cash - debt
   let netCash = null;
   if (balance) {
-    netCash = safe(balance.cashAndShortTermInvestments, 0) - safe(balance.totalDebt, 0);
+    if (balance.netCashDirect !== null && balance.netCashDirect !== undefined) {
+      netCash = balance.netCashDirect;
+    } else {
+      netCash = safe(balance.cashAndShortTermInvestments, 0) - safe(balance.totalDebt, 0);
+    }
   }
 
   // Forward PER: price / fwd EPS (estimates next year)
