@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10Bagger Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Main backgrounds — warm white */
+  --bg:        #f7f8fa;
+  --s1:        #ffffff;
+  --s2:        #f2f4f7;
+  --s3:        #e9ecf1;
+  --s4:        #dde1e8;
+  --border:    rgba(15,30,60,0.09);
+  --border-hi: rgba(14,165,233,0.30);
+
+  /* Sidebar — sky blue */
+  --navy:      #0ea5e9;
+  --navy-2:    #0993d4;
+  --navy-3:    #1ab0f5;
+  --navy-text: rgba(255,255,255,0.96);
+  --navy-dim:  rgba(255,255,255,0.60);
+  --navy-dim2: rgba(255,255,255,0.32);
+
+  /* Accent — deeper sky for content area */
+  --blue:      #0284c7;
+  --blue-dim:  rgba(2,132,199,0.07);
+  --blue-mid:  rgba(2,132,199,0.15);
+  --cyan:      #06b6d4;
+
+  /* Text — slate, not black */
+  --text:      #1e293b;
+  --text-2:    #475569;
+  --text-3:    #94a3b8;
+
+  /* Status — refined, not loud */
+  --green:     #059669;
+  --green-bg:  rgba(5,150,105,0.07);
+  --red:       #dc2626;
+  --red-bg:    rgba(220,38,38,0.07);
+  --amber:     #d97706;
+  --amber-bg:  rgba(217,119,6,0.07);
+
+  /* Typography */
+  --font:  'DM Sans', sans-serif;
+  --mono:  'DM Mono', monospace;
+
+  /* Spacing */
+  --r: 5px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── LAYOUT ── */
+.app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--navy);
+  border-right: none;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sb-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+.sb-logo-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sb-logo-icon {
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,0.20);
+  border-radius: var(--r);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  color: white;
+  font-family: var(--mono);
+  flex-shrink: 0;
+}
+.sb-logo-name { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; color: var(--navy-text); }
+.sb-logo-sub { font-family: var(--mono); font-size: 10px; color: var(--navy-dim); margin-top: 4px; letter-spacing: 0.5px; }
+
+.sb-user {
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  display: flex; align-items: center; gap: 10px;
+}
+.sb-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: white;
+  flex-shrink: 0;
+}
+.sb-name { font-size: 13px; font-weight: 500; color: var(--navy-text); }
+.sb-plan { font-family: var(--mono); font-size: 9px; color: rgba(224,242,254,0.90); margin-top: 1px; }
+
+.sb-nav { padding: 12px 10px; flex: 1; }
+.sb-group { font-family: var(--mono); font-size: 9px; color: var(--navy-dim2); letter-spacing: 1.5px; padding: 12px 10px 5px; text-transform: uppercase; }
+
+.sb-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  font-size: 13px; font-weight: 400;
+  color: var(--navy-dim);
+  margin-bottom: 1px;
+  position: relative;
+  white-space: nowrap;
+}
+.sb-item:hover { background: rgba(255,255,255,0.12); color: var(--navy-text); }
+.sb-item.active { background: rgba(255,255,255,0.22); color: white; font-weight: 500; }
+.sb-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 2px; border-radius: 2px;
+  background: white;
+}
+.sb-item svg { width: 14px; height: 14px; flex-shrink: 0; opacity: .7; }
+.sb-item.active svg { opacity: 1; }
+
+.sb-pill {
+  margin-left: auto;
+  font-family: var(--mono); font-size: 8px;
+  padding: 2px 6px; border-radius: 2px;
+  background: var(--blue-dim); color: var(--blue);
+}
+.sb-pill.new { background: var(--amber-bg); color: var(--amber); }
+.sb-pill.live { background: var(--green-bg); color: var(--green); }
+
+.sb-bottom {
+  padding: 14px;
+  border-top: 1px solid rgba(255,255,255,0.10);
+}
+.sb-plan-card {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--r);
+  padding: 14px;
+}
+.sb-plan-label { font-family: var(--mono); font-size: 9px; color: rgba(224,242,254,0.90); letter-spacing: 1px; margin-bottom: 4px; }
+.sb-plan-price { font-size: 20px; font-weight: 600; color: white; }
+.sb-plan-price span { font-size: 12px; color: var(--text-2); font-weight: 400; }
+.sb-plan-desc { font-size: 11px; color: var(--navy-dim); margin-top: 6px; line-height: 1.5; }
+
+/* ── MAIN ── */
+.main { display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 32px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 0 var(--border), 0 2px 8px rgba(0,0,0,0.04);
+  position: sticky; top: 0; z-index: 50;
+}
+.search-wrap {
+  display: flex; align-items: center;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  flex: 1; max-width: 420px;
+  transition: border-color .15s;
+}
+.search-wrap:focus-within { border-color: var(--blue); }
+.search-wrap input {
+  background: transparent; border: none; outline: none;
+  padding: 9px 14px;
+  font-family: var(--mono); font-size: 12px;
+  color: var(--text); width: 100%;
+  letter-spacing: 0.5px;
+}
+.search-wrap input::placeholder { color: var(--text-3); }
+.search-btn {
+  background: var(--navy); border: none;
+  padding: 9px 16px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1px;
+  color: white; cursor: pointer;
+  border-radius: 0 var(--r) var(--r) 0;
+  transition: background .12s; white-space: nowrap;
+}
+.search-btn:hover { background: #5a9fe8; }
+.tb-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.tb-btn {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.5px;
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--text-2);
+  cursor: pointer; transition: all .12s;
+}
+.tb-btn:hover { border-color: var(--blue); color: var(--blue); }
+.tb-notif {
+  width: 32px; height: 32px;
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: var(--r);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative; font-size: 14px;
+  transition: border-color .12s;
+}
+.tb-notif:hover { border-color: var(--blue); }
+.tb-notif-dot {
+  position: absolute; top: 5px; right: 5px;
+  width: 6px; height: 6px;
+  background: var(--red); border-radius: 50%;
+  border: 1.5px solid var(--bg);
+}
+
+/* ── PAGES ── */
+.page { display: none; padding: 32px; animation: fadeIn .2s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── PAGE HEADER ── */
+.ph { margin-bottom: 28px; }
+.ph-title { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; color: var(--text); }
+.ph-sub { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+
+/* ── GENERIC COMPONENTS ── */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.section-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px;
+  color: var(--text-3); text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.tag {
+  display: inline-block;
+  font-family: var(--mono); font-size: 10px;
+  padding: 3px 8px; border-radius: 3px;
+  background: var(--s3); color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.tag.blue { background: var(--blue-dim); color: var(--blue); border-color: var(--border-hi); }
+.tag.green { background: var(--green-bg); color: var(--green); }
+.tag.red { background: var(--red-bg); color: var(--red); }
+.tag.amber { background: var(--amber-bg); color: var(--amber); }
+
+.tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.tags-row .tag { display: flex; align-items: center; gap: 5px; }
+.tags-row .tag-dot { width: 5px; height: 5px; border-radius: 50%; }
+
+/* ── DATA TABLE ── */
+.dt { width: 100%; border-collapse: collapse; }
+.dt th {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.8px;
+  color: var(--text-3); padding: 9px 14px;
+  text-align: left; border-bottom: 1px solid var(--border);
+  background: var(--s2); white-space: nowrap;
+}
+.dt td { padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 13px; }
+.dt tbody tr { transition: background .1s; cursor: pointer; }
+.dt tbody tr:hover td { background: var(--s2); }
+.dt .t-mono { font-family: var(--mono); }
+.dt .t-blue { color: var(--blue); font-weight: 500; }
+.dt .t-dim  { color: var(--text-2); }
+.dt .t-right { text-align: right; }
+.dt .t-green { color: var(--green); }
+.dt .t-red   { color: var(--red); }
+.dt .t-amber { color: var(--amber); }
+
+/* ── KPI GRID ── */
+.kpi-grid { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.kpi-cell { background: var(--s1); padding: 18px 22px; border-top: 2px solid transparent; }
+.kpi-cell:first-child { border-top-color: var(--blue); }
+.kpi-label { font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.8px; margin-bottom: 8px; }
+.kpi-val { font-size: 28px; font-weight: 600; line-height: 1; letter-spacing: -0.8px; }
+.kpi-val.blue  { color: var(--blue); }
+.kpi-val.green { color: var(--green); }
+.kpi-val.red   { color: var(--red); }
+.kpi-val.amber { color: var(--amber); }
+.kpi-meta { font-size: 11px; color: var(--text-3); margin-top: 5px; }
+
+/* ── SCORE DISPLAY ── */
+.score-pct {
+  font-size: 52px; font-weight: 600; letter-spacing: -2px;
+  line-height: 1;
+}
+.score-pct .denom { font-size: 20px; color: var(--text-2); font-weight: 400; letter-spacing: 0; }
+
+.verdict {
+  display: inline-block;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px;
+  padding: 5px 14px; border-radius: var(--r);
+  margin-top: 10px;
+}
+.verdict.pass { background: var(--green-bg); color: var(--green); border: 1px solid rgba(52,196,124,.2); }
+.verdict.warn { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(232,168,48,.2); }
+.verdict.fail { background: var(--red-bg); color: var(--red); border: 1px solid rgba(224,92,92,.2); }
+
+/* ── CRITERIA GRID (10 weighted) ── */
+.cr-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 24px; }
+
+.cr-cell {
+  background: var(--s1);
+  padding: 18px 16px;
+  position: relative;
+  transition: background .12s;
+}
+.cr-cell:hover { background: var(--s2); }
+.cr-cell.pass { border-top: 2px solid var(--green); }
+.cr-cell.fail { border-top: 2px solid var(--red); }
+.cr-cell.warn { border-top: 2px solid var(--amber); }
+
+.cr-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.cr-num { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
+.cr-weight {
+  font-family: var(--mono); font-size: 9px;
+  padding: 2px 6px; border-radius: 2px;
+}
+.cr-weight.full { background: var(--blue-dim); color: var(--blue); }
+.cr-weight.half { background: var(--s3); color: var(--text-3); }
+
+.cr-name { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 10px; line-height: 1.3; }
+.cr-val { font-size: 20px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+.cr-cell.pass .cr-val { color: var(--green); }
+.cr-cell.fail .cr-val { color: var(--red); }
+.cr-cell.warn .cr-val { color: var(--amber); }
+
+.cr-threshold { font-family: var(--mono); font-size: 9px; color: var(--text-3); margin-bottom: 6px; }
+.cr-note { font-size: 11px; color: var(--text-2); line-height: 1.4; }
+
+.cr-badge {
+  position: absolute; bottom: 12px; right: 12px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.5px;
+  padding: 2px 7px; border-radius: 2px;
+}
+.pass .cr-badge { background: var(--green-bg); color: var(--green); }
+.fail .cr-badge { background: var(--red-bg); color: var(--red); }
+.warn .cr-badge { background: var(--amber-bg); color: var(--amber); }
+
+/* Score breakdown bar */
+.score-bar-wrap { background: var(--s2); border: 1px solid var(--border); box-shadow: inset 0 1px 2px rgba(0,0,0,0.03); border-radius: var(--r); padding: 16px 20px; margin-bottom: 24px; }
+.score-bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.score-bar-row:last-child { margin: 0; }
+.score-bar-label { font-size: 12px; color: var(--text-2); width: 220px; flex-shrink: 0; }
+.score-bar-track { flex: 1; height: 4px; background: var(--s3); border-radius: 2px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
+.score-bar-fill.pass { background: var(--green); }
+.score-bar-fill.fail { background: var(--red); }
+.score-bar-fill.warn { background: var(--amber); }
+.score-bar-pts { font-family: var(--mono); font-size: 10px; color: var(--text-2); width: 60px; text-align: right; }
+.score-bar-max { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
+
+/* ── ESTIMATES ── */
+.est-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 24px; }
+.est-col { background: var(--s1); padding: 20px; }
+.est-yr { font-family: var(--mono); font-size: 10px; color: var(--blue); letter-spacing: 1px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.est-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.est-row:last-child { border: none; }
+.est-k { font-size: 12px; color: var(--text-2); }
+.est-v { font-family: var(--mono); font-size: 12px; color: var(--text); }
+.est-v.up { color: var(--green); }
+
+/* ── ANALYSIS BLOCK ── */
+.analysis-block {
+  background: var(--s1);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--blue);
+  border-radius: var(--r);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+.ab-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--blue); margin-bottom: 10px; }
+.ab-title { font-size: 17px; font-weight: 600; margin-bottom: 16px; letter-spacing: -0.3px; }
+.ab-body p { font-size: 13px; color: #3a5070; line-height: 1.85; margin-bottom: 12px; }
+.ab-body p:last-child { margin: 0; }
+.ab-body strong { color: var(--text); font-weight: 500; }
+
+.quote-block {
+  background: #f0f9ff; border-left: 3px solid var(--blue);
+  padding: 12px 18px; margin: 14px 0; border-radius: 0 var(--r) var(--r) 0;
+}
+.quote-text { font-size: 13px; font-style: italic; color: var(--text); line-height: 1.6; }
+.quote-attr { font-family: var(--mono); font-size: 9px; color: var(--text-3); margin-top: 6px; }
+
+/* ── WATCHLIST ROW ── */
+.wl-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 90px 80px 70px 60px;
+  align-items: center;
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  cursor: pointer; transition: background .1s;
+}
+.wl-row:hover { background: var(--s2); }
+.wl-row.head { cursor: default; background: var(--s2); }
+.wl-row.head:hover { background: var(--s2); }
+.wl-head-cell { font-family: var(--mono); font-size: 9px; color: var(--text-3); letter-spacing: 0.8px; }
+
+.wl-ticker { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--blue); }
+.wl-name   { font-size: 13px; color: var(--text); font-weight: 400; }
+.wl-price  { font-family: var(--mono); font-size: 12px; text-align: right; color: var(--text); }
+
+.pct-pill {
+  display: inline-block;
+  font-family: var(--mono); font-size: 10px;
+  padding: 2px 7px; border-radius: 2px;
+}
+.pct-pill.up   { background: var(--green-bg); color: var(--green); }
+.pct-pill.down { background: var(--red-bg); color: var(--red); }
+
+.score-chip {
+  display: inline-block;
+  font-family: var(--mono); font-size: 10px;
+  padding: 2px 8px; border-radius: 2px;
+}
+.score-chip.h { background: var(--green-bg); color: var(--green); }
+.score-chip.m { background: var(--amber-bg); color: var(--amber); }
+.score-chip.l { background: var(--red-bg); color: var(--red); }
+
+.alert-led { width: 6px; height: 6px; border-radius: 50%; margin: 0 auto; }
+.alert-led.on  { background: var(--green); box-shadow: 0 0 5px var(--green); }
+.alert-led.off { background: var(--s4); }
+
+/* ── NEWS ── */
+.news-item { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: background .1s; }
+.news-item:hover { background: var(--s2); }
+.news-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.news-headline { font-size: 13px; color: var(--text); line-height: 1.5; font-weight: 400; }
+.news-sentiment { font-family: var(--mono); font-size: 10px; margin-top: 5px; }
+.news-time { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-left: auto; }
+
+/* ── TOGGLE ── */
+.toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--border); }
+.toggle-row:last-child { border: none; }
+.toggle-label { font-size: 13px; color: var(--text); font-weight: 400; }
+.toggle-desc  { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.toggle {
+  width: 40px; height: 22px; background: var(--s4); border-radius: 11px;
+  position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0;
+}
+.toggle.on { background: var(--blue); }
+.toggle::after {
+  content: ''; position: absolute;
+  width: 16px; height: 16px; background: white; border-radius: 50%;
+  top: 3px; left: 3px; transition: transform .2s;
+}
+.toggle.on::after { transform: translateX(18px); }
+
+/* ── FILTER CHIPS ── */
+.filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.f-chip {
+  font-family: var(--mono); font-size: 10px;
+  padding: 6px 12px; border-radius: var(--r);
+  border: 1px solid var(--border);
+  color: var(--text-2); cursor: pointer; transition: all .12s;
+}
+.f-chip:hover { border-color: var(--blue-mid); color: var(--blue); }
+.f-chip.active { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+.f-chip.clear  { border-color: transparent; color: var(--text-3); }
+.f-chip.clear:hover { color: var(--red); }
+
+/* ── SECTION DIVIDER ── */
+.sec-div {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px; margin-top: 4px;
+}
+.sec-div-title { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; }
+.sec-div-line { flex: 1; height: 1px; background: var(--border); }
+.sec-div-meta { font-family: var(--mono); font-size: 9px; color: var(--text-3); white-space: nowrap; }
+
+/* ── SCORE BADGE (for congress / institutional / insider pages) ── */
+.signal-badge {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.5px;
+  padding: 3px 8px; border-radius: 2px;
+}
+.signal-badge.strong { background: var(--green-bg); color: var(--green); }
+.signal-badge.pos    { background: rgba(52,196,124,0.05); color: var(--green); }
+.signal-badge.neg    { background: var(--red-bg); color: var(--red); }
+.signal-badge.neu    { background: var(--s3); color: var(--text-3); }
+.signal-badge.watch  { background: var(--amber-bg); color: var(--amber); }
+.signal-badge.plan   { background: var(--s3); color: var(--text-3); font-style: italic; }
+
+/* ── DCF ── */
+.dcf-inputs { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+.dcf-group-label { font-family: var(--mono); font-size: 9px; color: var(--text-3); letter-spacing: 0.8px; margin-bottom: 6px; }
+.dcf-group-val {
+  font-family: var(--mono); font-size: 16px; color: var(--text);
+  background: var(--s3); border: 1px solid var(--border);
+  padding: 8px 12px; border-radius: var(--r);
+}
+.dcf-result {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #f0f9ff; border: 1px solid rgba(2,132,199,0.15);
+  border-radius: var(--r); padding: 18px 22px;
+}
+.dcf-result-label { font-family: var(--mono); font-size: 10px; color: var(--blue); margin-bottom: 4px; }
+.dcf-result-val { font-size: 36px; font-weight: 600; color: var(--green); letter-spacing: -1px; }
+.dcf-upside { font-family: var(--mono); font-size: 11px; color: var(--green); margin-top: 3px; }
+
+/* ── COMPARATOR ── */
+.cmp-grid { display: grid; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.cmp-cell { padding: 13px 18px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.cmp-header { background: var(--s2); padding: 20px 18px; text-align: center; }
+.cmp-label-col { background: var(--s2); font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.5px; display: flex; align-items: center; }
+
+/* ── SCORE HISTORY SVG ── */
+.sh-chart { background: var(--s1); border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,0.04); border-radius: var(--r); padding: 20px 24px; margin-bottom: 20px; }
+
+/* ── EARNINGS TABS ── */
+.earn-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 0; }
+.earn-tab {
+  padding: 12px 18px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.5px;
+  color: var(--text-3); cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all .12s;
+}
+.earn-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.earn-tab:hover  { color: var(--text); }
+
+/* ── IDEAS CARDS ── */
+.idea-card {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 18px 20px; cursor: pointer;
+  transition: border-color .12s;
+}
+.idea-card:hover { border-color: var(--blue); box-shadow: 0 2px 8px rgba(14,165,233,0.12); }
+
+/* ── MISC ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.two-col > div { background: var(--s1); padding: 20px 22px; }
+
+.horizon-rule { height: 1px; background: var(--border); margin: 20px 0; }
+
+.empty-add {
+  background: var(--s1); border: 1.5px dashed var(--border);
+  border-radius: var(--r); padding: 28px; text-align: center;
+  cursor: pointer; transition: border-color .12s;
+}
+.empty-add:hover { border-color: var(--blue-mid); }
+.empty-add-title { font-size: 14px; font-weight: 500; color: var(--text-2); margin-bottom: 4px; }
+.empty-add-sub   { font-size: 12px; color: var(--text-3); }
+
+.cta-strip {
+  background: #f0f9ff; border: 1px solid rgba(2,132,199,0.15);
+  border-radius: var(--r); padding: 14px 20px;
+  font-size: 13px; color: var(--text-2); line-height: 1.6;
+}
+.cta-strip strong { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">
+      <div class="sb-logo-icon">10</div>
+      <div class="sb-logo-name">10Bagger Pro</div>
+    </div>
+    <div class="sb-logo-sub">portfolio analyzer</div>
+  </div>
+
+  <div class="sb-user">
+    <div class="sb-avatar">J</div>
+    <div>
+      <div class="sb-name">10BaggerPortfolio</div>
+      <div class="sb-plan">PRO · activo</div>
+    </div>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-group">Principal</div>
+    <div class="sb-item active" onclick="nav('dashboard')">
+      <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="sb-item" onclick="nav('analyzer')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+      Analizador
+      <span class="sb-pill">10 criterios</span>
+    </div>
+    <div class="sb-item" onclick="nav('screener')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M4 8h8M6 12h4"/></svg>
+      Screener 10B
+    </div>
+    <div class="sb-item" onclick="nav('alerts')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2a4 4 0 0 1 4 4v3l1 2H3l1-2V6a4 4 0 0 1 4-4zM6.5 13a1.5 1.5 0 0 0 3 0"/></svg>
+      Alertas
+      <span class="sb-pill new">3</span>
+    </div>
+
+    <div class="sb-group">Análisis</div>
+    <div class="sb-item" onclick="nav('dcf')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12 6 7 9 9 14 3"/></svg>
+      DCF Wizard
+    </div>
+    <div class="sb-item" onclick="nav('earnings')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 8h6M5 5h6M5 11h4"/></svg>
+      Earnings Intel
+    </div>
+    <div class="sb-item" onclick="nav('news')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v2H2zM2 7h8v2H2zM2 11h6v2H2z"/></svg>
+      News · Sentiment
+    </div>
+    <div class="sb-item" onclick="nav('comparator')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3v10M11 3v10M2 8h12"/></svg>
+      Comparador
+    </div>
+
+    <div class="sb-group">Smart Money</div>
+    <div class="sb-item" onclick="nav('insider')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Insider Activity
+      <span class="sb-pill live">live</span>
+    </div>
+    <div class="sb-item" onclick="nav('congress')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L2 6h12zM3 6v7h10V6M6 13V9h4v4"/></svg>
+      Congress Trading
+      <span class="sb-pill new">new</span>
+    </div>
+    <div class="sb-item" onclick="nav('institutional')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="12" height="8" rx="1"/><path d="M5 6V4a3 3 0 0 1 6 0v2"/></svg>
+      Institucionales
+    </div>
+    <div class="sb-item" onclick="nav('short')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 3 10 7 7 5 2 10"/><path d="M10 3h4v4"/></svg>
+      Short Interest
+    </div>
+
+    <div class="sb-group">Mi Portfolio</div>
+    <div class="sb-item" onclick="nav('ideas')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2a4 4 0 0 1 4 4c0 2-1 3-2 4H6c-1-1-2-2-2-4a4 4 0 0 1 4-4zM6 13h4M7 15h2"/></svg>
+      Tesis Guardadas
+    </div>
+    <div class="sb-item" onclick="nav('scorehistory')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12 6 8 9 10 14 4"/><circle cx="6" cy="8" r="1.5" fill="currentColor" stroke="none"/><circle cx="9" cy="10" r="1.5" fill="currentColor" stroke="none"/></svg>
+      Score Histórico
+    </div>
+
+    <div class="sb-group">Cuenta</div>
+    <div class="sb-item" onclick="nav('settings')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.2 3.2l1.4 1.4M11.4 11.4l1.4 1.4M3.2 12.8l1.4-1.4M11.4 4.6l1.4-1.4"/></svg>
+      Configuración
+    </div>
+  </nav>
+
+  <div class="sb-bottom">
+    <div class="sb-plan-card">
+      <div class="sb-plan-label">PLAN PRO</div>
+      <div class="sb-plan-price">5€ <span>/ mes</span></div>
+      <div class="sb-plan-desc">Ilimitado · Insider · Congress · Screener · Comparador · Score histórico</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="search-wrap">
+      <input type="text" placeholder="Buscar ticker — NVDA, ZTS, MSCI…" />
+      <button class="search-btn">Analizar</button>
+    </div>
+    <div class="tb-right">
+      <button class="tb-btn" onclick="nav('screener')">Screener</button>
+      <button class="tb-btn" onclick="nav('comparator')">Comparar</button>
+      <div class="tb-notif" onclick="nav('alerts')">
+        🔔<div class="tb-notif-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: DASHBOARD ══ -->
+  <section class="page active" id="page-dashboard">
+    <div class="ph">
+      <div class="ph-title">Dashboard</div>
+      <div class="ph-sub">Miércoles 12 marzo 2026 · 9 valores en watchlist · 3 alertas sin revisar</div>
+    </div>
+
+    <div class="tags-row">
+      <span class="tag blue"><span class="tag-dot" style="background:var(--green)"></span>FMP · Real time</span>
+      <span class="tag blue"><span class="tag-dot" style="background:var(--blue)"></span>Estimaciones Wall St.</span>
+      <span class="tag blue"><span class="tag-dot" style="background:var(--cyan)"></span>Claude Sonnet · IA</span>
+      <span class="tag blue"><span class="tag-dot" style="background:var(--amber)"></span>Perplexity · Noticias</span>
+      <span class="tag blue"><span class="tag-dot" style="background:var(--text-3)"></span>Earnings transcripts</span>
+    </div>
+
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi-cell">
+        <div class="kpi-label">Score medio</div>
+        <div class="kpi-val green">73<span style="font-size:16px;color:var(--text-2);font-weight:400">%</span></div>
+        <div class="kpi-meta">↑ +5pp vs mes anterior</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">Oportunidades</div>
+        <div class="kpi-val blue">3</div>
+        <div class="kpi-meta">NVDA · MSCI · CRWD → PASAN</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">Alertas activas</div>
+        <div class="kpi-val" style="color:var(--text)">12</div>
+        <div class="kpi-meta" style="color:var(--green)">3 nuevas hoy</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">Earnings próx. 30d</div>
+        <div class="kpi-val" style="color:var(--text)">5</div>
+        <div class="kpi-meta">ZTS · NVO · ASML · MSCI · CRWD</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="sec-div"><span class="sec-div-title">Watchlist</span><div class="sec-div-line"></div><span class="sec-div-meta">9 VALORES</span></div>
+        <div class="wl-row head">
+          <span class="wl-head-cell">Ticker</span>
+          <span class="wl-head-cell">Empresa</span>
+          <span class="wl-head-cell" style="text-align:right">Precio</span>
+          <span class="wl-head-cell" style="text-align:center">Score</span>
+          <span class="wl-head-cell" style="text-align:center">Var.</span>
+          <span class="wl-head-cell" style="text-align:center">Alerta</span>
+        </div>
+        <div class="wl-row" onclick="nav('analyzer')"><span class="wl-ticker">NVDA</span><span class="wl-name">NVIDIA Corp.</span><span class="wl-price">$875.40</span><span style="text-align:center"><span class="score-chip h">83%</span></span><span style="text-align:center"><span class="pct-pill up">+2.1%</span></span><span style="text-align:center"><div class="alert-led on"></div></span></div>
+        <div class="wl-row" onclick="nav('analyzer')"><span class="wl-ticker">MSCI</span><span class="wl-name">MSCI Inc.</span><span class="wl-price">$526.20</span><span style="text-align:center"><span class="score-chip h">81%</span></span><span style="text-align:center"><span class="pct-pill up">+0.8%</span></span><span style="text-align:center"><div class="alert-led on"></div></span></div>
+        <div class="wl-row" onclick="nav('analyzer')"><span class="wl-ticker">CRWD</span><span class="wl-name">CrowdStrike</span><span class="wl-price">$312.80</span><span style="text-align:center"><span class="score-chip h">79%</span></span><span style="text-align:center"><span class="pct-pill up">+3.2%</span></span><span style="text-align:center"><div class="alert-led on"></div></span></div>
+        <div class="wl-row"><span class="wl-ticker">ASML</span><span class="wl-name">ASML Holding</span><span class="wl-price">$680.10</span><span style="text-align:center"><span class="score-chip m">68%</span></span><span style="text-align:center"><span class="pct-pill up">+1.4%</span></span><span style="text-align:center"><div class="alert-led off"></div></span></div>
+        <div class="wl-row" onclick="nav('analyzer')"><span class="wl-ticker">ZTS</span><span class="wl-name">Zoetis</span><span class="wl-price">$155.50</span><span style="text-align:center"><span class="score-chip m">56%</span></span><span style="text-align:center"><span class="pct-pill down">-1.2%</span></span><span style="text-align:center"><div class="alert-led on"></div></span></div>
+        <div class="wl-row"><span class="wl-ticker">NVO</span><span class="wl-name">Novo Nordisk</span><span class="wl-price">$68.40</span><span style="text-align:center"><span class="score-chip m">54%</span></span><span style="text-align:center"><span class="pct-pill down">-0.6%</span></span><span style="text-align:center"><div class="alert-led off"></div></span></div>
+      </div>
+      <div>
+        <div class="sec-div"><span class="sec-div-title">Noticias · IA</span><div class="sec-div-line"></div><span class="sec-div-meta">PERPLEXITY · TIEMPO REAL</span></div>
+        <div class="news-item"><div class="news-meta"><span class="tag green">NVDA</span><span class="tag" style="font-size:10px">Reuters</span><span class="news-time">14 min</span></div><div class="news-headline">NVIDIA anuncia Blackwell Ultra con 50% más rendimiento en inferencia de LLMs</div><div class="news-sentiment" style="color:var(--green)">▲ Muy positivo · Score podría subir</div></div>
+        <div class="news-item"><div class="news-meta"><span class="tag amber">ZTS</span><span class="tag" style="font-size:10px">Bloomberg</span><span class="news-time">2h</span></div><div class="news-headline">Zoetis Q4: EPS en línea, guidance 2026 ligeramente por debajo del consenso</div><div class="news-sentiment" style="color:var(--red)">▼ Negativo · Guidance débil</div></div>
+        <div class="news-item"><div class="news-meta"><span class="tag green">CRWD</span><span class="tag" style="font-size:10px">TechCrunch</span><span class="news-time">6h</span></div><div class="news-headline">CrowdStrike gana contrato federal de $400M con el Departamento de Defensa</div><div class="news-sentiment" style="color:var(--green)">▲ Muy positivo · Catalizador directo</div></div>
+        <div class="news-item"><div class="news-meta"><span class="tag blue">MSCI</span><span class="tag" style="font-size:10px">WSJ</span><span class="news-time">4h</span></div><div class="news-headline">MSCI gana cuota en índices ESG mientras fondos pasivos aceleran adopción global</div><div class="news-sentiment" style="color:var(--green)">▲ Positivo · Expansión TAM confirmada</div></div>
+      </div>
+    </div>
+
+    <div class="sec-div" style="margin-top:8px"><span class="sec-div-title">Earnings Calendar</span><div class="sec-div-line"></div><span class="sec-div-meta">PRÓXIMOS 30 DÍAS</span></div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <div style="background:var(--s1);padding:14px 16px"><div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:5px">18 MAR</div><div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--blue)">ZTS</div><div style="font-size:11px;color:var(--text-3);margin-top:3px">Q1 2026E</div><div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px">EPS est: $1.38</div></div>
+      <div style="background:var(--s1);padding:14px 16px"><div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:5px">21 MAR</div><div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--blue)">NVO</div><div style="font-size:11px;color:var(--text-3);margin-top:3px">Q4 2025E</div><div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px">EPS est: $0.96</div></div>
+      <div style="background:var(--s1);padding:14px 16px"><div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:5px">25 MAR</div><div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--blue)">ASML</div><div style="font-size:11px;color:var(--text-3);margin-top:3px">Q1 2026E</div><div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px">EPS est: €4.12</div></div>
+      <div style="background:var(--s2);border:1px solid var(--border-hi);padding:14px 16px"><div style="font-family:var(--mono);font-size:9px;color:var(--blue);margin-bottom:5px">2 ABR · próximo</div><div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--blue)">MSCI</div><div style="font-size:11px;color:var(--text-3);margin-top:3px">Q1 2026E</div><div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px">EPS est: $4.87</div></div>
+      <div style="background:var(--s1);padding:14px 16px"><div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:5px">8 ABR</div><div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--blue)">CRWD</div><div style="font-size:11px;color:var(--text-3);margin-top:3px">Q1 FY2027E</div><div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px">EPS est: $0.94</div></div>
+    </div>
+  </section>
+
+  <!-- ══ PAGE: ANALYZER (10 weighted criteria) ══ -->
+  <section class="page" id="page-analyzer">
+    <div class="ph">
+      <div class="ph-title">Análisis completo · <span style="color:var(--blue)">ZTS</span></div>
+      <div class="ph-sub">Zoetis Inc. · NYSE · Healthcare / Animal Health · FMP + EODHD + Claude Sonnet</div>
+    </div>
+
+    <div class="tags-row">
+      <span class="tag blue"><span class="tag-dot" style="background:var(--green)"></span>FMP · Fundamentales reales 2024</span>
+      <span class="tag blue"><span class="tag-dot" style="background:var(--blue)"></span>Consenso Wall St. 2025E–2026E</span>
+      <span class="tag blue"><span class="tag-dot" style="background:var(--cyan)"></span>Claude · Análisis editorial</span>
+      <span class="tag blue"><span class="tag-dot" style="background:var(--amber)"></span>Perplexity · Noticias hoy</span>
+    </div>
+
+    <!-- Company header + score -->
+    <div class="two-col" style="margin-bottom:24px">
+      <div style="padding:24px 26px">
+        <div style="font-size:26px;font-weight:600;letter-spacing:-0.6px;margin-bottom:10px">Zoetis Inc.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+          <span class="tag blue">ZTS</span><span class="tag blue">NYSE</span><span class="tag">Healthcare</span><span class="tag">Animal Health</span><span class="tag">Large Cap</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px">
+          <span style="font-family:var(--mono);font-size:28px;font-weight:500">$155.50</span>
+          <span style="font-family:var(--mono);font-size:12px;color:var(--red)">▼ -1.2% hoy</span>
+        </div>
+        <div style="display:flex;gap:20px;font-family:var(--mono);font-size:10px;color:var(--text-3);flex-wrap:wrap">
+          <span>Cap: <span style="color:var(--text)">$70.8B</span></span>
+          <span>52W: <span style="color:var(--text)">$145–$210</span></span>
+          <span>Beta: <span style="color:var(--text)">0.68</span></span>
+          <span>PER 2026e: <span style="color:var(--amber)">28.4x</span></span>
+          <span>EV/FCF 2026e: <span style="color:var(--amber)">32.1x</span></span>
+        </div>
+      </div>
+      <div style="background:var(--s2);padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-align:center;margin-bottom:8px;letter-spacing:1px">SCORE PONDERADO</div>
+          <div class="score-pct" style="color:var(--amber);text-align:center">56<span class="denom">%</span></div>
+        </div>
+        <div class="verdict warn">◈ REVISAR CON CAUTELA</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-align:center">6 PASAN · 2 FALLAN · 2 NEUTROS</div>
+      </div>
+    </div>
+
+    <!-- Score breakdown bar -->
+    <div class="sec-div"><span class="sec-div-title">Desglose de puntuación</span><div class="sec-div-line"></div><span class="sec-div-meta">PONDERADO · MAX 100%</span></div>
+    <div class="score-bar-wrap" style="margin-bottom:24px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:14px;display:flex;gap:16px">
+        <span><span style="color:var(--blue)">●</span> Peso completo (1.0x)</span>
+        <span><span style="color:var(--text-3)">●</span> Peso reducido (0.5x)</span>
+      </div>
+      <div class="score-bar-row"><span class="score-bar-label">Crecimiento Ingresos</span><div class="score-bar-track"><div class="score-bar-fill warn" style="width:35%"></div></div><span class="score-bar-pts" style="color:var(--amber)">5 / 14 pts <span class="score-bar-max">1.0x</span></span></div>
+      <div class="score-bar-row"><span class="score-bar-label">TAM & Modelo de Negocio</span><div class="score-bar-track"><div class="score-bar-fill pass" style="width:90%"></div></div><span class="score-bar-pts" style="color:var(--green)">13 / 14 pts <span class="score-bar-max">1.0x</span></span></div>
+      <div class="score-bar-row"><span class="score-bar-label">ROE</span><div class="score-bar-track"><div class="score-bar-fill pass" style="width:100%"></div></div><span class="score-bar-pts" style="color:var(--green)">14 / 14 pts <span class="score-bar-max">1.0x</span></span></div>
+      <div class="score-bar-row"><span class="score-bar-label">Valoración Forward 2026e</span><div class="score-bar-track"><div class="score-bar-fill warn" style="width:55%"></div></div><span class="score-bar-pts" style="color:var(--amber)">8 / 14 pts <span class="score-bar-max">1.0x</span></span></div>
+      <div class="score-bar-row"><span class="score-bar-label">Valor Terminal / Resiliencia IA</span><div class="score-bar-track"><div class="score-bar-fill pass" style="width:85%"></div></div><span class="score-bar-pts" style="color:var(--green)">12 / 14 pts <span class="score-bar-max">1.0x</span></span></div>
+      <div class="score-bar-row"><span class="score-bar-label">FCF CAGR 5 años</span><div class="score-bar-track"><div class="score-bar-fill pass" style="width:70%"></div></div><span class="score-bar-pts" style="color:var(--green)">10 / 14 pts <span class="score-bar-max">1.0x</span></span></div>
+      <div class="score-bar-row"><span class="score-bar-label" style="color:var(--text-3)">Conversión EBITDA→FCF</span><div class="score-bar-track"><div class="score-bar-fill pass" style="width:100%"></div></div><span class="score-bar-pts" style="color:var(--green)">7 / 7 pts <span class="score-bar-max">0.5x</span></span></div>
+      <div class="score-bar-row"><span class="score-bar-label" style="color:var(--text-3)">Alineación Directiva</span><div class="score-bar-track"><div class="score-bar-fill fail" style="width:10%"></div></div><span class="score-bar-pts" style="color:var(--red)">1 / 7 pts <span class="score-bar-max">0.5x</span></span></div>
+      <div class="score-bar-row"><span class="score-bar-label" style="color:var(--text-3)">Dilución Accionarial</span><div class="score-bar-track"><div class="score-bar-fill pass" style="width:100%"></div></div><span class="score-bar-pts" style="color:var(--green)">7 / 7 pts <span class="score-bar-max">0.5x</span></span></div>
+      <div class="score-bar-row"><span class="score-bar-label" style="color:var(--text-3)">Caja Neta / Balance</span><div class="score-bar-track"><div class="score-bar-fill fail" style="width:0%"></div></div><span class="score-bar-pts" style="color:var(--red)">0 / 7 pts <span class="score-bar-max">0.5x</span></span></div>
+      <div style="height:1px;background:var(--border);margin:12px 0"></div>
+      <div class="score-bar-row"><span class="score-bar-label" style="font-weight:600;color:var(--text)">TOTAL PONDERADO</span><div class="score-bar-track"><div class="score-bar-fill warn" style="width:56%;background:var(--amber)"></div></div><span class="score-bar-pts" style="color:var(--amber);font-weight:600">77 / 140 pts → 56%</span></div>
+    </div>
+
+    <!-- 10 criteria grid -->
+    <div class="sec-div"><span class="sec-div-title">10 Criterios 10Bagger</span><div class="sec-div-line"></div></div>
+    <div class="cr-grid">
+      <!-- 01 -->
+      <div class="cr-cell warn">
+        <div class="cr-top"><span class="cr-num">01</span><span class="cr-weight full">peso 1.0×</span></div>
+        <div class="cr-name">Crecimiento de Ingresos</div>
+        <div class="cr-val">+6.2%</div>
+        <div class="cr-threshold">≥15% PASA · FMP real</div>
+        <div class="cr-note">Por debajo del umbral. Crecimiento moderado pero positivo.</div>
+        <div class="cr-badge">NEUTRAL</div>
+      </div>
+      <!-- 02 -->
+      <div class="cr-cell pass">
+        <div class="cr-top"><span class="cr-num">02</span><span class="cr-weight half">peso 0.5×</span></div>
+        <div class="cr-name">Conversión EBITDA→FCF</div>
+        <div class="cr-val">72%</div>
+        <div class="cr-threshold">≥60% PASA · FMP real</div>
+        <div class="cr-note">Excelente. Negocio que genera caja real.</div>
+        <div class="cr-badge">PASA</div>
+      </div>
+      <!-- 03 -->
+      <div class="cr-cell fail">
+        <div class="cr-top"><span class="cr-num">03</span><span class="cr-weight half">peso 0.5×</span></div>
+        <div class="cr-name">Alineación Directiva</div>
+        <div class="cr-val">0.3%</div>
+        <div class="cr-threshold">≥5% PASA · FMP insider</div>
+        <div class="cr-note">Gestores sin piel en el juego suficiente.</div>
+        <div class="cr-badge">FALLA</div>
+      </div>
+      <!-- 04 -->
+      <div class="cr-cell pass">
+        <div class="cr-top"><span class="cr-num">04</span><span class="cr-weight full">peso 1.0×</span></div>
+        <div class="cr-name">TAM & Modelo de Negocio</div>
+        <div class="cr-val">ALTO</div>
+        <div class="cr-threshold">Cualitativo · Claude IA</div>
+        <div class="cr-note">Salud animal global $60B+, creciendo ~8% anual.</div>
+        <div class="cr-badge">PASA</div>
+      </div>
+      <!-- 05 -->
+      <div class="cr-cell pass">
+        <div class="cr-top"><span class="cr-num">05</span><span class="cr-weight full">peso 1.0×</span></div>
+        <div class="cr-name">ROE</div>
+        <div class="cr-val">+48.5%</div>
+        <div class="cr-threshold">≥20% PASA · FMP TTM</div>
+        <div class="cr-note">Ventaja competitiva estructural demostrada.</div>
+        <div class="cr-badge">PASA</div>
+      </div>
+      <!-- 06 -->
+      <div class="cr-cell pass">
+        <div class="cr-top"><span class="cr-num">06</span><span class="cr-weight half">peso 0.5×</span></div>
+        <div class="cr-name">Dilución Accionarial</div>
+        <div class="cr-val">-1.8%</div>
+        <div class="cr-threshold">≤0.5% PASA · FMP real</div>
+        <div class="cr-note">Recompras activas. Devuelve valor al accionista.</div>
+        <div class="cr-badge">PASA</div>
+      </div>
+      <!-- 07 -->
+      <div class="cr-cell fail">
+        <div class="cr-top"><span class="cr-num">07</span><span class="cr-weight half">peso 0.5×</span></div>
+        <div class="cr-name">Caja Neta / Balance</div>
+        <div class="cr-val">−$11.2B</div>
+        <div class="cr-threshold">Positivo PASA · FMP real</div>
+        <div class="cr-note">Deuda neta elevada. Limita flexibilidad estratégica.</div>
+        <div class="cr-badge">FALLA</div>
+      </div>
+      <!-- 08 -->
+      <div class="cr-cell warn">
+        <div class="cr-top"><span class="cr-num">08</span><span class="cr-weight full">peso 1.0×</span></div>
+        <div class="cr-name">Valoración Forward 2026e</div>
+        <div class="cr-val">JUSTO</div>
+        <div class="cr-threshold">PER 28.4x · Hist: 32x · PEG: 1.8</div>
+        <div class="cr-note">Por debajo de su media histórica. No barato, no caro.</div>
+        <div class="cr-badge">NEUTRAL</div>
+      </div>
+      <!-- 09 — NEW -->
+      <div class="cr-cell pass">
+        <div class="cr-top"><span class="cr-num">09</span><span class="cr-weight full">peso 1.0×</span></div>
+        <div class="cr-name">Valor Terminal · Resiliencia IA</div>
+        <div class="cr-val">ALTO</div>
+        <div class="cr-threshold">ALTO / MEDIO / BAJO · Claude IA</div>
+        <div class="cr-note">Patentes de fármacos veterinarios no replicables por IA.</div>
+        <div class="cr-badge">PASA</div>
+      </div>
+      <!-- 10 — NEW -->
+      <div class="cr-cell pass">
+        <div class="cr-top"><span class="cr-num">10</span><span class="cr-weight full">peso 1.0×</span></div>
+        <div class="cr-name">FCF CAGR 5 años</div>
+        <div class="cr-val">+11.4%</div>
+        <div class="cr-threshold">≥10% PASA · FMP real</div>
+        <div class="cr-note">Crecimiento de caja consistente y compounding.</div>
+        <div class="cr-badge">PASA</div>
+      </div>
+    </div>
+
+    <!-- New criterion 09 detailed block -->
+    <div class="analysis-block" style="border-left-color:var(--cyan)">
+      <div class="ab-tag">CRITERIO 09 · VALOR TERMINAL / RESILIENCIA IA · CLAUDE SONNET</div>
+      <div class="ab-title">Zoetis: moat biológico y regulatorio resistente a la disrupción tecnológica</div>
+      <div class="ab-body">
+        <p>El negocio de Zoetis se asienta sobre tres barreras de entrada que la IA y las nuevas tecnologías difícilmente pueden erosionar en el medio plazo. Primero, su cartera de <strong>más de 300 productos con protección de patente</strong> en farmacología veterinaria requiere décadas de I+D clínico y aprobación regulatoria en múltiples jurisdicciones — no hay atajo tecnológico para esto. Segundo, las relaciones con <strong>veterinarios y cadenas de distribución</strong> son contratos de largo plazo con altísimos costes de cambio. Tercero, el know-how en biológicos (anticuerpos monoclonales como Cytopoint) es un activo que se acumula con años de ensayos clínicos.</p>
+        <p>El riesgo más plausible de disrupción sería el desarrollo de diagnósticos veterinarios basados en IA que reduzcan la frecuencia de prescripción. Sin embargo, esto afectaría más a los servicios diagnósticos que a los fármacos. La tendencia de humanización de mascotas refuerza, no erosiona, el gasto en medicamentos de calidad. <strong>Valoración: ALTO — moat estructuralmente resistente.</strong></p>
+      </div>
+    </div>
+
+    <!-- Estimates -->
+    <div class="sec-div"><span class="sec-div-title">Estimaciones financieras</span><div class="sec-div-line"></div><span class="sec-div-meta">FMP + CONSENSO WALL ST.</span></div>
+    <div class="est-grid">
+      <div class="est-col"><div class="est-yr">2024 · REAL</div><div class="est-row"><span class="est-k">Ingresos</span><span class="est-v">$9.2bn</span></div><div class="est-row"><span class="est-k">EBITDA</span><span class="est-v">$3.1bn</span></div><div class="est-row"><span class="est-k">FCF</span><span class="est-v">$2.2bn</span></div><div class="est-row"><span class="est-k">EPS</span><span class="est-v">$5.31</span></div><div class="est-row"><span class="est-k">Crec. Ing.</span><span class="est-v">+6.2%</span></div><div class="est-row"><span class="est-k">FCF CAGR 5a</span><span class="est-v">+11.4%</span></div></div>
+      <div class="est-col"><div class="est-yr">2025 · ESTIMADO</div><div class="est-row"><span class="est-k">Ingresos</span><span class="est-v up">$9.8bn</span></div><div class="est-row"><span class="est-k">EBITDA</span><span class="est-v up">$3.4bn</span></div><div class="est-row"><span class="est-k">FCF</span><span class="est-v up">$2.4bn</span></div><div class="est-row"><span class="est-k">EPS</span><span class="est-v up">$5.72</span></div><div class="est-row"><span class="est-k">Crec. Ing.</span><span class="est-v up">+6.5%</span></div><div class="est-row"><span class="est-k">Mg. EBITDA</span><span class="est-v up">34.7%</span></div></div>
+      <div class="est-col"><div class="est-yr">2026 · ESTIMADO</div><div class="est-row"><span class="est-k">Ingresos</span><span class="est-v up">$10.5bn</span></div><div class="est-row"><span class="est-k">EBITDA</span><span class="est-v up">$3.7bn</span></div><div class="est-row"><span class="est-k">FCF</span><span class="est-v up">$2.7bn</span></div><div class="est-row"><span class="est-k">EPS</span><span class="est-v up">$6.14</span></div><div class="est-row"><span class="est-k">Crec. Ing.</span><span class="est-v up">+7.1%</span></div><div class="est-row"><span class="est-k">Mg. EBITDA</span><span class="est-v up">35.2%</span></div></div>
+    </div>
+
+    <!-- AI Analysis -->
+    <div class="analysis-block">
+      <div class="ab-tag">ANÁLISIS EDITORIAL · 10BAGGERPORTFOLIO · CLAUDE SONNET</div>
+      <div class="ab-title">Zoetis: calidad excepcional, crecimiento insuficiente para el umbral 10Bagger</div>
+      <div class="ab-body">
+        <p>Zoetis es la empresa farmacéutica veterinaria más grande del mundo y uno de los negocios de mayor calidad en todo el universo de large caps globales. El ROE del 48.5%, la conversión FCF del 72% y el FCF CAGR a 5 años del 11.4% son números que pocas empresas de este tamaño pueden exhibir. El moat es real, medible y estructuralmente resistente a la disrupción tecnológica.</p>
+        <p>El problema para el inversor 10Bagger es que <strong>crecimiento y valoración no se alinean</strong> en este momento. Un +6.2% en ingresos es respetable para un negocio maduro, pero está muy lejos del 15% que buscamos en candidatos con potencial de multiplicar por 10. La deuda neta de $11.2B no es insostenible — la empresa genera $2.2B de FCF — pero limita la velocidad de reinversión y añade riesgo en entornos de tipos restrictivos.</p>
+        <p>El criterio de Valor Terminal es el más diferenciador: <strong>Zoetis tiene uno de los moats más defendibles frente a IA de todo nuestro universo</strong>. Los fármacos veterinarios con patente, los ensayos clínicos acumulados y las relaciones con distribuidores son activos que no se pueden replicar con modelos de lenguaje. Esto da tranquilidad de largo plazo.</p>
+        <p>Veredicto 56%: empresa excelente en watchlist activa. No hay prisa por entrar — si el precio corrige a $130–140 (PER 2026e ~23x) la ecuación mejora notablemente. Alerta de precio configurada.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PAGE: SCREENER ══ -->
+  <section class="page" id="page-screener">
+    <div class="ph"><div class="ph-title">Screener 10Bagger</div><div class="ph-sub">Filtra el universo con tu metodología propietaria · 10 criterios ponderados · 4.200+ empresas</div></div>
+    <div class="filter-bar">
+      <span class="f-chip active">Score ≥ 70%</span>
+      <span class="f-chip active">Rev. Growth ≥ 15%</span>
+      <span class="f-chip active">FCF Conv. ≥ 60%</span>
+      <span class="f-chip">ROE ≥ 20%</span>
+      <span class="f-chip">FCF CAGR ≥ 10%</span>
+      <span class="f-chip">Valor Terminal ALTO</span>
+      <span class="f-chip">Caja Neta+</span>
+      <span class="f-chip">Val. BARATO</span>
+      <span class="f-chip clear">× Limpiar</span>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-bottom:12px">10 resultados · ordenado por Score 10Bagger</div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <table class="dt" style="width:100%">
+        <thead><tr><th>Ticker</th><th>Empresa</th><th>Score</th><th style="text-align:right">Rev. Growth</th><th style="text-align:right">FCF CAGR</th><th style="text-align:right">ROE</th><th style="text-align:right">Val. Terminal</th><th style="text-align:right">PER 26e</th></tr></thead>
+        <tbody>
+          <tr onclick="nav('analyzer')"><td class="t-blue t-mono">MSCI</td><td class="t-dim">MSCI Inc.</td><td><span class="score-chip h">81%</span></td><td class="t-right t-green t-mono">+14.2%</td><td class="t-right t-green t-mono">+16.8%</td><td class="t-right t-green t-mono">+142%</td><td class="t-right"><span class="tag green" style="font-size:10px">ALTO</span></td><td class="t-right t-mono">31.2x</td></tr>
+          <tr><td class="t-blue t-mono">CRWD</td><td class="t-dim">CrowdStrike</td><td><span class="score-chip h">79%</span></td><td class="t-right t-green t-mono">+25.1%</td><td class="t-right t-green t-mono">+31.4%</td><td class="t-right t-green t-mono">+38%</td><td class="t-right"><span class="tag green" style="font-size:10px">ALTO</span></td><td class="t-right t-mono">52.4x</td></tr>
+          <tr><td class="t-blue t-mono">NVDA</td><td class="t-dim">NVIDIA</td><td><span class="score-chip h">83%</span></td><td class="t-right t-green t-mono">+94.0%</td><td class="t-right t-green t-mono">+48.2%</td><td class="t-right t-green t-mono">+123%</td><td class="t-right"><span class="tag amber" style="font-size:10px">MEDIO</span></td><td class="t-right t-mono">28.1x</td></tr>
+          <tr><td class="t-blue t-mono">ASML</td><td class="t-dim">ASML Holding</td><td><span class="score-chip m">68%</span></td><td class="t-right t-green t-mono">+17.3%</td><td class="t-right t-green t-mono">+14.1%</td><td class="t-right t-green t-mono">+62%</td><td class="t-right"><span class="tag green" style="font-size:10px">ALTO</span></td><td class="t-right t-mono">22.8x</td></tr>
+          <tr><td class="t-blue t-mono">MELI</td><td class="t-dim">MercadoLibre</td><td><span class="score-chip m">67%</span></td><td class="t-right t-green t-mono">+31.4%</td><td class="t-right t-green t-mono">+22.3%</td><td class="t-right t-green t-mono">+44%</td><td class="t-right"><span class="tag amber" style="font-size:10px">MEDIO</span></td><td class="t-right t-mono">38.2x</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ PAGE: ALERTS ══ -->
+  <section class="page" id="page-alerts">
+    <div class="ph"><div class="ph-title">Centro de alertas</div><div class="ph-sub">Notificaciones inteligentes cuando algo relevante cambia en tus posiciones</div></div>
+    <div class="two-col" style="margin-bottom:24px">
+      <div style="border-top:2px solid var(--green)"><div style="margin-bottom:4px;display:flex;align-items:center;justify-content:space-between"><span class="tag green">SCORE ↑</span><span class="tag red" style="font-size:9px">NUEVA</span></div><div style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--blue);margin:8px 0 4px">NVDA</div><div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:10px">Score subió de 71% a 83% tras Q4 2025. Criterio de Crecimiento de Ingresos pasó de NEUTRAL a PASA (+94% YoY).</div><div style="font-family:var(--mono);font-size:10px;color:var(--text-3)">Hoy · 08:42</div><div class="tag blue" style="margin-top:10px;cursor:pointer" onclick="nav('analyzer')">Ver análisis →</div></div>
+      <div style="border-top:2px solid var(--blue)"><div style="margin-bottom:4px;display:flex;align-items:center;justify-content:space-between"><span class="tag blue">NOTICIA</span><span class="tag red" style="font-size:9px">NUEVA</span></div><div style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--blue);margin:8px 0 4px">CRWD</div><div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:10px">Contrato federal de $400M detectado. ARR estimado podría subir +1.3%. Score podría mejorar en próxima actualización.</div><div style="font-family:var(--mono);font-size:10px;color:var(--text-3)">Hoy · 06:15</div></div>
+      <div style="border-top:2px solid var(--amber)"><div style="margin-bottom:4px;display:flex;align-items:center;justify-content:space-between"><span class="tag amber">PRECIO</span><span class="tag red" style="font-size:9px">NUEVA</span></div><div style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--blue);margin:8px 0 4px">ZTS</div><div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:10px">Alcanzado $155.50. Alerta en $158. PER 2026e baja a 28.4x vs media histórica 32x.</div><div style="font-family:var(--mono);font-size:10px;color:var(--text-3)">Hoy · 14:22</div><div class="tag blue" style="margin-top:10px;cursor:pointer" onclick="nav('analyzer')">Revisar →</div></div>
+      <div style="border-top:2px solid var(--text-3)"><div style="margin-bottom:4px"><span class="tag">EARNINGS</span></div><div style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--blue);margin:8px 0 4px">MSCI</div><div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:10px">Reporta Q1 2026 el 2 de abril. Consenso EPS $4.87 (+11% YoY). Transcript disponible.</div><div style="font-family:var(--mono);font-size:10px;color:var(--text-3)">Hace 2h</div></div>
+    </div>
+    <div class="sec-div"><span class="sec-div-title">Configurar alertas</span><div class="sec-div-line"></div></div>
+    <div class="card">
+      <div class="toggle-row"><div><div class="toggle-label">Alerta de Score 10Bagger</div><div class="toggle-desc">Notifica cuando el score sube o baja ≥5pp en tus posiciones</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="toggle-row"><div><div class="toggle-label">Noticias relevantes (Perplexity IA)</div><div class="toggle-desc">Filtra solo noticias con impacto real estimado en el score</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="toggle-row"><div><div class="toggle-label">Recordatorio earnings</div><div class="toggle-desc">7 días y 1 día antes de cada earnings de tu watchlist</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="toggle-row"><div><div class="toggle-label">Alertas de precio personalizadas</div><div class="toggle-desc">Define rangos de precio para cada valor</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="toggle-row"><div><div class="toggle-label">Resumen semanal por email</div><div class="toggle-desc">Estado de watchlist cada lunes 08:00</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+    </div>
+  </section>
+
+  <!-- ══ PAGE: DCF ══ -->
+  <section class="page" id="page-dcf">
+    <div class="ph"><div class="ph-title">DCF Wizard · <span style="color:var(--blue)">ZTS</span></div><div class="ph-sub">Modelo de valoración por descuento de flujos · Datos FMP + estimaciones consenso</div></div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-label">INPUTS DEL MODELO · AJUSTABLES</div>
+      <div class="dcf-inputs">
+        <div><div class="dcf-group-label">FCF BASE 2026E</div><div class="dcf-group-val">$2.7bn</div></div>
+        <div><div class="dcf-group-label">CREC. FCF 5A</div><div class="dcf-group-val">8.5%</div></div>
+        <div><div class="dcf-group-label">TASA TERMINAL</div><div class="dcf-group-val">3.0%</div></div>
+        <div><div class="dcf-group-label">WACC</div><div class="dcf-group-val">9.2%</div></div>
+      </div>
+      <div class="dcf-result">
+        <div><div class="dcf-result-label">VALOR INTRÍNSECO ESTIMADO</div><div style="font-size:12px;color:var(--text-3);margin-top:3px">Con 30% margen de seguridad → $120</div></div>
+        <div style="text-align:right"><div class="dcf-result-val">$171.40</div><div class="dcf-upside">↑ +10.2% upside vs $155.50 actual</div></div>
+      </div>
+    </div>
+    <div class="cta-strip">El modelo sugiere <strong>$171</strong> de valor intrínseco. El upside del 10% es insuficiente para el perfil 10Bagger. En <strong>$120–130</strong> el margen de seguridad sería del 30–35% y la tesis se volvería accionable.</div>
+  </section>
+
+  <!-- ══ PAGE: EARNINGS ══ -->
+  <section class="page" id="page-earnings">
+    <div class="ph"><div class="ph-title">Earnings Intelligence</div><div class="ph-sub">Transcripts de conference calls analizados por IA · Browserless + Claude Sonnet</div></div>
+    <div class="earn-tabs">
+      <div class="earn-tab active">ZTS · Q4 2025</div>
+      <div class="earn-tab">NVDA · Q4 2025</div>
+      <div class="earn-tab">MSCI · Q3 2025</div>
+      <div class="earn-tab">CRWD · Q3 FY26</div>
+      <div class="earn-tab">ASML · Q4 2025</div>
+    </div>
+    <div class="analysis-block" style="border-radius:0 var(--r) var(--r) var(--r)">
+      <div class="ab-tag">TRANSCRIPT IA · ZOETIS Q4 2025 · 12 FEB 2026 · BROWSERLESS + CLAUDE</div>
+      <div class="ab-title">Tono cauteloso, fundamentos intactos, guidance conservador</div>
+      <div class="ab-body">
+        <p><strong>Resumen ejecutivo:</strong> Q4 en línea (EPS $1.42 vs $1.40e, ingresos $2.31bn vs $2.29e). El guidance 2026 de $10.3–10.6bn quedó levemente bajo el extremo alto del consenso, generando una caída del 3% en after-hours.</p>
+        <div class="quote-block"><div class="quote-text">"The pet humanization trend remains intact. We're seeing no meaningful slowdown in companion animal spending, and our dermatology portfolio continues to grow double-digits globally."</div><div class="quote-attr">— Kristin Peck, CEO · Zoetis Q4 2025 Earnings Call</div></div>
+        <p><strong>Señales positivas:</strong> Pipeline de anticuerpos monoclonales mencionado 3 veces. Segmento internacional +12% en moneda constante. Margen EBITDA guidance 35–36%, levemente por encima del consenso.</p>
+        <p><strong>Señales de alerta:</strong> Presión en márgenes H1 2026 por costes de fabricación. Sin mención a desapalancamiento. Analistas preguntaron repetidamente por el timeline de deuda.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PAGE: NEWS ══ -->
+  <section class="page" id="page-news">
+    <div class="ph"><div class="ph-title">News · Sentiment IA</div><div class="ph-sub">Noticias filtradas por IA · Solo las que impactan en tus valores · Perplexity</div></div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <div class="news-item"><div class="news-meta"><span class="tag green">NVDA</span><span class="tag" style="font-size:10px">Reuters</span><span class="news-time">14 min</span></div><div class="news-headline">NVIDIA anuncia Blackwell Ultra con 50% más rendimiento en inferencia — impacto directo en revenue FY2027</div><div class="news-sentiment" style="color:var(--green)">▲ Muy positivo · Score puede subir · Criterio TAM reforzado</div></div>
+      <div class="news-item"><div class="news-meta"><span class="tag amber">ZTS</span><span class="tag" style="font-size:10px">Bloomberg</span><span class="news-time">2h</span></div><div class="news-headline">Zoetis Q4: EPS en línea, guidance 2026 ligeramente por debajo del consenso. CFO cita presión en márgenes H1</div><div class="news-sentiment" style="color:var(--red)">▼ Negativo · Guidance débil · Revisar criterio de crecimiento</div></div>
+      <div class="news-item"><div class="news-meta"><span class="tag green">CRWD</span><span class="tag" style="font-size:10px">TechCrunch</span><span class="news-time">6h</span></div><div class="news-headline">CrowdStrike gana contrato Pentágono $400M — el mayor en su historia. ARR estimado +1.3%</div><div class="news-sentiment" style="color:var(--green)">▲ Muy positivo · Catalizador directo · Criterio TAM fortalecido</div></div>
+      <div class="news-item"><div class="news-meta"><span class="tag blue">ASML</span><span class="tag" style="font-size:10px">FT</span><span class="news-time">8h</span></div><div class="news-headline">ASML recibe pedidos récord de EUV en Q4 2025 de TSMC y Samsung para nodos de 2nm</div><div class="news-sentiment" style="color:var(--green)">▲ Positivo · Backlog robusto · Confirma tesis de crecimiento 2026</div></div>
+      <div class="news-item"><div class="news-meta"><span class="tag">NVO</span><span class="tag" style="font-size:10px">WSJ</span><span class="news-time">10h</span></div><div class="news-headline">FDA aprueba nueva indicación de semaglutide para insuficiencia cardíaca — expansión TAM</div><div class="news-sentiment" style="color:var(--green)">▲ Positivo · Reduce riesgo regulatorio · TAM ampliado</div></div>
+    </div>
+  </section>
+
+  <!-- ══ PAGE: COMPARATOR ══ -->
+  <section class="page" id="page-comparator">
+    <div class="ph"><div class="ph-title">Comparador side-by-side</div><div class="ph-sub">Enfrenta dos empresas en los 10 criterios ponderados · ¿ZTS o NVO? Que hablen los datos</div></div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <div style="display:grid;grid-template-columns:180px 1fr 1fr">
+        <div style="background:var(--s2);padding:18px"></div>
+        <div style="background:var(--s2);padding:18px 22px;text-align:center;border-bottom:2px solid var(--amber)">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:4px">ZTS · NYSE</div>
+          <div style="font-size:18px;font-weight:600">Zoetis Inc.</div>
+          <div style="margin-top:8px"><span class="score-chip m">56%</span></div>
+        </div>
+        <div style="background:var(--s2);padding:18px 22px;text-align:center;border-bottom:2px solid var(--green)">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:4px">NVO · NYSE</div>
+          <div style="font-size:18px;font-weight:600">Novo Nordisk</div>
+          <div style="margin-top:8px"><span class="score-chip m">61%</span></div>
+        </div>
+
+        <!-- rows -->
+        <div style="background:var(--s1);padding:12px 18px;font-family:var(--mono);font-size:10px;color:var(--text-3);border-bottom:1px solid var(--border);display:flex;align-items:center">01 · Crec. Ingresos <span class="score-bar-max" style="margin-left:4px">1.0×</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center"><span class="t-mono" style="color:var(--amber)">+6.2%</span> <span class="tag amber" style="font-size:9px">NEUTRAL</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center;border-left:1px solid var(--border)"><span class="t-mono" style="color:var(--amber)">+9.4%</span> <span class="tag amber" style="font-size:9px">NEUTRAL</span></div>
+
+        <div style="background:var(--s1);padding:12px 18px;font-family:var(--mono);font-size:10px;color:var(--text-3);border-bottom:1px solid var(--border);display:flex;align-items:center">02 · FCF Conv. <span class="score-bar-max" style="margin-left:4px">0.5×</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center"><span class="t-mono" style="color:var(--green)">72%</span> <span class="tag green" style="font-size:9px">PASA</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center;border-left:1px solid var(--border)"><span class="t-mono" style="color:var(--green)">68%</span> <span class="tag green" style="font-size:9px">PASA</span></div>
+
+        <div style="background:var(--s1);padding:12px 18px;font-family:var(--mono);font-size:10px;color:var(--text-3);border-bottom:1px solid var(--border);display:flex;align-items:center">03 · Insider % <span class="score-bar-max" style="margin-left:4px">0.5×</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center"><span class="t-mono" style="color:var(--red)">0.3%</span> <span class="tag red" style="font-size:9px">FALLA</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center;border-left:1px solid var(--border)"><span class="t-mono" style="color:var(--red)">0.4%</span> <span class="tag red" style="font-size:9px">FALLA</span></div>
+
+        <div style="background:var(--s1);padding:12px 18px;font-family:var(--mono);font-size:10px;color:var(--text-3);border-bottom:1px solid var(--border);display:flex;align-items:center">05 · ROE <span class="score-bar-max" style="margin-left:4px">1.0×</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center"><span class="t-mono" style="color:var(--green)">+48.5%</span> <span class="tag green" style="font-size:9px">PASA</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center;border-left:1px solid var(--border)"><span class="t-mono" style="color:var(--green)">+82.4%</span> <span class="tag green" style="font-size:9px">PASA</span></div>
+
+        <div style="background:var(--s1);padding:12px 18px;font-family:var(--mono);font-size:10px;color:var(--text-3);border-bottom:1px solid var(--border);display:flex;align-items:center">07 · Caja Neta <span class="score-bar-max" style="margin-left:4px">0.5×</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center"><span class="t-mono" style="color:var(--red)">-$11.2B</span> <span class="tag red" style="font-size:9px">FALLA</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center;border-left:1px solid var(--border)"><span class="t-mono" style="color:var(--red)">-$28.1B</span> <span class="tag red" style="font-size:9px">FALLA</span></div>
+
+        <div style="background:var(--s1);padding:12px 18px;font-family:var(--mono);font-size:10px;color:var(--text-3);border-bottom:1px solid var(--border);display:flex;align-items:center">08 · Val. Forward <span class="score-bar-max" style="margin-left:4px">1.0×</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center"><span class="t-mono" style="color:var(--amber)">JUSTO</span> <span style="font-family:var(--mono);font-size:9px;color:var(--text-3)">PEG 1.8</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center;border-left:1px solid var(--border)"><span class="t-mono" style="color:var(--green)">BARATO</span> <span style="font-family:var(--mono);font-size:9px;color:var(--text-3)">PEG 0.9</span></div>
+
+        <div style="background:var(--s1);padding:12px 18px;font-family:var(--mono);font-size:10px;color:var(--text-3);border-bottom:1px solid var(--border);display:flex;align-items:center">09 · Val. Terminal <span class="score-bar-max" style="margin-left:4px">1.0×</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center"><span class="tag green" style="font-size:10px">ALTO</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center;border-left:1px solid var(--border)"><span class="tag amber" style="font-size:10px">MEDIO</span></div>
+
+        <div style="background:var(--s1);padding:12px 18px;font-family:var(--mono);font-size:10px;color:var(--text-3);border-bottom:1px solid var(--border);display:flex;align-items:center">10 · FCF CAGR 5a <span class="score-bar-max" style="margin-left:4px">1.0×</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center"><span class="t-mono" style="color:var(--green)">+11.4%</span> <span class="tag green" style="font-size:9px">PASA</span></div>
+        <div style="background:var(--s1);padding:12px 22px;border-bottom:1px solid var(--border);text-align:center;border-left:1px solid var(--border)"><span class="t-mono" style="color:var(--green)">+13.8%</span> <span class="tag green" style="font-size:9px">PASA</span></div>
+
+        <!-- Verdict -->
+        <div style="background:var(--s2);padding:16px 18px;font-family:var(--mono);font-size:10px;color:var(--text-3);display:flex;align-items:center;font-weight:600">VEREDICTO IA</div>
+        <div style="background:var(--s2);padding:16px 22px;font-size:12px;color:var(--text-2);line-height:1.5">Moat estructuralmente superior y mejor Valor Terminal. Pierde en crecimiento y deuda.</div>
+        <div style="background:var(--s2);padding:16px 22px;border-left:1px solid var(--border)">
+          <span class="tag green">★ PREFERIDO AHORA</span>
+          <div style="font-size:12px;color:var(--text-2);margin-top:8px;line-height:1.5">Valoración más atractiva + GLP-1 catalizador + FCF CAGR superior. Short interest alto crea asimetría.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PAGE: INSIDER ══ -->
+  <section class="page" id="page-insider">
+    <div class="ph"><div class="ph-title">Insider Activity</div><div class="ph-sub">Form 4 SEC en tiempo real · Cuando los directivos compran con su propio dinero, el mercado escucha</div></div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi-cell"><div class="kpi-label">Compras insider (30d)</div><div class="kpi-val green">$8.4M</div><div class="kpi-meta">14 transacciones · 6 empresas</div></div>
+      <div class="kpi-cell"><div class="kpi-label">Ventas insider (30d)</div><div class="kpi-val red">$31.2M</div><div class="kpi-meta">22 transacciones · 8 empresas</div></div>
+      <div class="kpi-cell"><div class="kpi-label">Ratio compra/venta</div><div class="kpi-val amber">0.27</div><div class="kpi-meta">Sesgo vendedor en watchlist</div></div>
+      <div class="kpi-cell"><div class="kpi-label">Señal más fuerte</div><div class="kpi-val blue">MSCI</div><div class="kpi-meta" style="color:var(--green)">CEO compró $2.1M esta semana</div></div>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
+      <table class="dt" style="width:100%">
+        <thead><tr><th>Fecha</th><th>Ticker</th><th>Directivo</th><th>Cargo</th><th>Tipo</th><th class="t-right">Acciones</th><th class="t-right">Valor</th><th>Señal</th></tr></thead>
+        <tbody>
+          <tr><td class="t-mono t-dim" style="font-size:11px">10 Mar</td><td class="t-blue t-mono">MSCI</td><td>Henry Fernandez</td><td class="t-dim" style="font-size:11px;font-family:var(--mono)">CEO</td><td><span class="tag green">COMPRA</span></td><td class="t-right t-green t-mono">+4,018</td><td class="t-right t-green t-mono">+$2.1M</td><td><span class="signal-badge strong">★★★ Fuerte</span></td></tr>
+          <tr><td class="t-mono t-dim" style="font-size:11px">8 Mar</td><td class="t-blue t-mono">CRWD</td><td>George Kurtz</td><td class="t-dim" style="font-size:11px;font-family:var(--mono)">CEO</td><td><span class="tag red">VENTA</span></td><td class="t-right t-red t-mono">-25,000</td><td class="t-right t-red t-mono">-$7.8M</td><td><span class="signal-badge neu">Neutral</span></td></tr>
+          <tr><td class="t-mono t-dim" style="font-size:11px">7 Mar</td><td class="t-blue t-mono">ASML</td><td>Christophe Fouquet</td><td class="t-dim" style="font-size:11px;font-family:var(--mono)">CEO</td><td><span class="tag green">COMPRA</span></td><td class="t-right t-green t-mono">+2,200</td><td class="t-right t-green t-mono">+$1.5M</td><td><span class="signal-badge pos">★★ Positivo</span></td></tr>
+          <tr><td class="t-mono t-dim" style="font-size:11px">5 Mar</td><td class="t-blue t-mono">NVDA</td><td>Jensen Huang</td><td class="t-dim" style="font-size:11px;font-family:var(--mono)">CEO</td><td><span class="tag red">VENTA</span></td><td class="t-right t-red t-mono">-120,000</td><td class="t-right t-red t-mono">-$105M</td><td><span class="signal-badge plan">plan 10b5-1</span></td></tr>
+          <tr><td class="t-mono t-dim" style="font-size:11px">3 Mar</td><td class="t-blue t-mono">ZTS</td><td>Kristin Peck</td><td class="t-dim" style="font-size:11px;font-family:var(--mono)">CEO</td><td><span class="tag red">VENTA</span></td><td class="t-right t-red t-mono">-15,000</td><td class="t-right t-red t-mono">-$2.4M</td><td><span class="signal-badge neg">✗ Negativo</span></td></tr>
+          <tr><td class="t-mono t-dim" style="font-size:11px">1 Mar</td><td class="t-blue t-mono">MSCI</td><td>Baer Pettit</td><td class="t-dim" style="font-size:11px;font-family:var(--mono)">President</td><td><span class="tag green">COMPRA</span></td><td class="t-right t-green t-mono">+1,500</td><td class="t-right t-green t-mono">+$789K</td><td><span class="signal-badge pos">★★ Positivo</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cta-strip">CEO + Presidente de MSCI comprando simultáneamente ($2.9M combinado) es la señal más relevante de las últimas dos semanas. <strong>Las ventas de NVDA son un plan 10b5-1 programado</strong> — sin señal informacional. La venta de Peck en ZTS, post-earnings, añade un punto de cautela adicional.</div>
+  </section>
+
+  <!-- ══ PAGE: CONGRESS ══ -->
+  <section class="page" id="page-congress">
+    <div class="ph"><div class="ph-title">Congress Trading</div><div class="ph-sub">Operaciones de senadores y representantes USA · STOCK Act · Quiver Quantitative</div></div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi-cell"><div class="kpi-label">Compras Congreso (30d)</div><div class="kpi-val green">$18.2M</div><div class="kpi-meta">En empresas de tu watchlist</div></div>
+      <div class="kpi-cell"><div class="kpi-label">Ticker más comprado</div><div class="kpi-val blue">NVDA</div><div class="kpi-meta">7 legisladores · $4.1M total</div></div>
+      <div class="kpi-cell"><div class="kpi-label">Sectores legislativos</div><div class="kpi-val" style="color:var(--text);font-size:20px">IA / CHIP</div><div class="kpi-meta">Mayor actividad en debate</div></div>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
+      <table class="dt" style="width:100%">
+        <thead><tr><th>Fecha</th><th>Legislador</th><th>Cámara</th><th>Ticker</th><th>Tipo</th><th class="t-right">Importe</th><th>Votación relacionada</th></tr></thead>
+        <tbody>
+          <tr><td class="t-mono t-dim" style="font-size:11px">8 Mar</td><td>Nancy Pelosi</td><td class="t-dim" style="font-family:var(--mono);font-size:11px">Cámara</td><td class="t-blue t-mono">NVDA</td><td><span class="tag green">COMPRA</span></td><td class="t-right t-green t-mono">$500K–$1M</td><td style="font-size:12px;color:var(--text-2)">AI Governance Act <span style="font-family:var(--mono);font-size:10px;color:var(--text-3)">(Abr 2026)</span></td></tr>
+          <tr><td class="t-mono t-dim" style="font-size:11px">6 Mar</td><td>Dan Crenshaw</td><td class="t-dim" style="font-family:var(--mono);font-size:11px">Cámara</td><td class="t-blue t-mono">CRWD</td><td><span class="tag green">COMPRA</span></td><td class="t-right t-green t-mono">$250K–$500K</td><td style="font-size:12px;color:var(--text-2)">Cyber Defense Act <span style="font-family:var(--mono);font-size:10px;color:var(--text-3)">(Mar 2026)</span></td></tr>
+          <tr><td class="t-mono t-dim" style="font-size:11px">28 Feb</td><td>Mark Warner</td><td class="t-dim" style="font-family:var(--mono);font-size:11px">Senado</td><td class="t-blue t-mono">ASML</td><td><span class="tag green">COMPRA</span></td><td class="t-right t-green t-mono">$100K–$250K</td><td style="font-size:12px;color:var(--text-2)">CHIPS Act II <span style="font-family:var(--mono);font-size:10px;color:var(--text-3)">(en debate)</span></td></tr>
+          <tr><td class="t-mono t-dim" style="font-size:11px">20 Feb</td><td>Tommy Tuberville</td><td class="t-dim" style="font-family:var(--mono);font-size:11px">Senado</td><td class="t-blue t-mono">NVDA</td><td><span class="tag green">COMPRA</span></td><td class="t-right t-green t-mono">$1M–$5M</td><td style="font-size:12px;color:var(--text-2)">Defense AI Budget <span style="font-family:var(--mono);font-size:10px;color:var(--text-3)">(Mar 2026)</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cta-strip">7 legisladores acumulando NVDA en las últimas 6 semanas, coincidiendo con el debate del AI Governance Act. <strong>El track record de Pelosi en tecnología semiconductora bate al S&P500 un 23%</strong> en los 12 meses posteriores a sus compras. Información pública que el mercado tarda en procesar.</div>
+  </section>
+
+  <!-- ══ PAGE: INSTITUTIONAL ══ -->
+  <section class="page" id="page-institutional">
+    <div class="ph"><div class="ph-title">Flujo institucional</div><div class="ph-sub">13F filings · Fondos entrando y saliendo de tus valores · Q4 2025</div></div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
+      <table class="dt" style="width:100%">
+        <thead><tr><th>Fondo</th><th>Estilo</th><th class="t-right">Posición</th><th class="t-right">Variación</th><th class="t-right">% cartera</th><th>Movimiento</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:500">Fundsmith Equity</td><td class="t-dim" style="font-family:var(--mono);font-size:11px">Quality Growth</td><td class="t-right t-mono">4.2M acc.</td><td class="t-right t-green t-mono">+820K</td><td class="t-right t-mono">3.8%</td><td><span class="tag green">↑ Aumenta</span></td></tr>
+          <tr><td style="font-weight:500">Baillie Gifford</td><td class="t-dim" style="font-family:var(--mono);font-size:11px">Long-term Growth</td><td class="t-right t-mono">6.1M acc.</td><td class="t-right t-green t-mono">+1.2M</td><td class="t-right t-mono">2.1%</td><td><span class="tag green">↑ Aumenta</span></td></tr>
+          <tr><td style="font-weight:500">Polen Capital</td><td class="t-dim" style="font-family:var(--mono);font-size:11px">Quality Compounder</td><td class="t-right t-mono">8.4M acc.</td><td class="t-right t-dim t-mono">—</td><td class="t-right t-mono">4.2%</td><td><span class="tag amber">→ Mantiene</span></td></tr>
+          <tr><td style="font-weight:500">ARK Invest</td><td class="t-dim" style="font-family:var(--mono);font-size:11px">Disruptive Growth</td><td class="t-right t-mono">1.1M acc.</td><td class="t-right t-red t-mono">-2.4M</td><td class="t-right t-mono">0.3%</td><td><span class="tag red">↓ Reduce</span></td></tr>
+          <tr><td style="font-weight:500">Vanguard</td><td class="t-dim" style="font-family:var(--mono);font-size:11px">Index / Passive</td><td class="t-right t-mono">28.2M acc.</td><td class="t-right t-green t-mono">+400K</td><td class="t-right t-mono">8.1%</td><td><span class="tag green">↑ Aumenta</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cta-strip">Fundsmith y Baillie Gifford aumentando simultáneamente en MSCI — ambos conocidos por disciplina en calidad y largo plazo — es una señal de convicción estructural. ARK reduciendo es consistente con su rotación hacia mayor beta. <strong>Señal neta: positiva.</strong></div>
+  </section>
+
+  <!-- ══ PAGE: SHORT ══ -->
+  <section class="page" id="page-short">
+    <div class="ph"><div class="ph-title">Short Interest</div><div class="ph-sub">% del float en posición corta · Evolución · Oportunidades contrarian · FINRA</div></div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
+      <table class="dt" style="width:100%">
+        <thead><tr><th>Ticker</th><th>Empresa</th><th class="t-right">Short %</th><th class="t-right">Días cubrir</th><th class="t-right">Var. 30d</th><th>Score 10B</th><th>Señal contrarian</th></tr></thead>
+        <tbody>
+          <tr><td class="t-blue t-mono">NVO</td><td class="t-dim">Novo Nordisk</td><td class="t-right t-red t-mono">14.2%</td><td class="t-right t-mono">6.8d</td><td class="t-right t-red t-mono">+4.8%</td><td><span class="score-chip m">54%</span></td><td><span class="signal-badge strong">★ Opp. contrarian</span></td></tr>
+          <tr><td class="t-blue t-mono">ZTS</td><td class="t-dim">Zoetis</td><td class="t-right t-amber t-mono">8.4%</td><td class="t-right t-mono">4.2d</td><td class="t-right t-red t-mono">+2.1%</td><td><span class="score-chip m">56%</span></td><td><span class="signal-badge watch">Vigilar</span></td></tr>
+          <tr><td class="t-blue t-mono">ASML</td><td class="t-dim">ASML Holding</td><td class="t-right t-amber t-mono">6.1%</td><td class="t-right t-mono">3.1d</td><td class="t-right t-green t-mono">-1.2%</td><td><span class="score-chip m">68%</span></td><td><span class="signal-badge pos">Cobertura en curso</span></td></tr>
+          <tr><td class="t-blue t-mono">MSCI</td><td class="t-dim">MSCI Inc.</td><td class="t-right t-green t-mono">2.8%</td><td class="t-right t-mono">1.4d</td><td class="t-right t-green t-mono">-0.8%</td><td><span class="score-chip h">81%</span></td><td><span class="signal-badge neu">Bajo interés corto</span></td></tr>
+          <tr><td class="t-blue t-mono">NVDA</td><td class="t-dim">NVIDIA</td><td class="t-right t-green t-mono">1.9%</td><td class="t-right t-mono">0.9d</td><td class="t-right t-green t-mono">-0.4%</td><td><span class="score-chip h">83%</span></td><td><span class="signal-badge neu">Mercado convencido</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cta-strip"><strong>NVO con 14.2% de float en corto y score 54%</strong> es la combinación más interesante. Si el próximo earnings supera estimaciones, la cobertura forzada del 14% puede generar un movimiento explosivo. Tesis asimétrica para seguimiento activo.</div>
+  </section>
+
+  <!-- ══ PAGE: IDEAS ══ -->
+  <section class="page" id="page-ideas">
+    <div class="ph"><div class="ph-title">Tesis guardadas</div><div class="ph-sub">Tu historial de ideas · Seguimiento automático del score y precio desde la fecha de tesis</div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+      <div class="idea-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div><div style="font-family:var(--mono);font-size:11px;color:var(--blue)">MSCI</div><div style="font-size:16px;font-weight:600;margin-top:2px">MSCI Inc.</div></div><span class="score-chip h">81%</span></div><div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:14px">"Monopolio de facto en índices. Pricing power excepcional. TAM expandiéndose en ESG y Private Assets."</div><div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px"><span style="color:var(--text-3)">Ene 2025</span><span style="color:var(--green)">+18.4% desde tesis</span></div></div>
+      <div class="idea-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div><div style="font-family:var(--mono);font-size:11px;color:var(--blue)">CRWD</div><div style="font-size:16px;font-weight:600;margin-top:2px">CrowdStrike</div></div><span class="score-chip h">79%</span></div><div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:14px">"Líder en ciberseguridad cloud-native. ARR +25% con NRR &gt;120%. Contrato federal es catalizador 2026."</div><div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px"><span style="color:var(--text-3)">Feb 2025</span><span style="color:var(--green)">+31.2% desde tesis</span></div></div>
+      <div class="idea-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div><div style="font-family:var(--mono);font-size:11px;color:var(--blue)">ASML</div><div style="font-size:16px;font-weight:600;margin-top:2px">ASML Holding</div></div><span class="score-chip m">68%</span></div><div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:14px">"Monopolio en litografía EUV. Sin competencia posible en 5–7 años. El cuello de botella de la era del chip."</div><div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px"><span style="color:var(--text-3)">Mar 2025</span><span style="color:var(--red)">-8.2% desde tesis</span></div></div>
+    </div>
+    <div class="empty-add"><div class="empty-add-title">+ Guardar nueva tesis</div><div class="empty-add-sub">Analiza un ticker y guarda tu razonamiento · El sistema hará seguimiento automático</div></div>
+  </section>
+
+  <!-- ══ PAGE: SCORE HISTORY ══ -->
+  <section class="page" id="page-scorehistory">
+    <div class="ph"><div class="ph-title">Score histórico</div><div class="ph-sub">Evolución del score 10Bagger ponderado en el tiempo · Detecta empresas en mejora o deterioro</div></div>
+    <div class="sh-chart">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--blue);margin-bottom:16px">NVDA · Evolución 18 meses · de 41% a 83%</div>
+      <svg width="100%" height="140" viewBox="0 0 820 140" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0284c7" stop-opacity="0.10"/>
+            <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="14" x2="820" y2="14" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>
+        <line x1="0" y1="42" x2="820" y2="42" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>
+        <line x1="0" y1="70" x2="820" y2="70" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>
+        <line x1="0" y1="98" x2="820" y2="98" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>
+        <text x="0" y="12" fill="#8a9bb0" font-family="DM Mono" font-size="9">100%</text>
+        <text x="0" y="40" fill="#8a9bb0" font-family="DM Mono" font-size="9">75%</text>
+        <text x="0" y="68" fill="#8a9bb0" font-family="DM Mono" font-size="9">50%</text>
+        <text x="0" y="96" fill="#8a9bb0" font-family="DM Mono" font-size="9">25%</text>
+        <path d="M 40,106 L 160,106 L 280,90 L 400,72 L 500,50 L 600,50 L 700,28 L 780,28 L 780,140 L 40,140 Z" fill="url(#g1)"/>
+        <polyline points="40,106 160,106 280,90 400,72 500,50 600,50 700,28 780,28"
+          fill="none" stroke="#0284c7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="40"  cy="106" r="4" fill="#0284c7"/>
+        <circle cx="160" cy="106" r="4" fill="#0284c7"/>
+        <circle cx="280" cy="90"  r="4" fill="#0284c7"/>
+        <circle cx="400" cy="72"  r="4" fill="#0284c7"/>
+        <circle cx="500" cy="50"  r="4" fill="#0284c7"/>
+        <circle cx="600" cy="50"  r="4" fill="#0284c7"/>
+        <circle cx="700" cy="28"  r="4" fill="#0284c7"/>
+        <circle cx="780" cy="28"  r="4" fill="#1a9960"/>
+        <text x="32"  y="100" fill="var(--text-3)" font-family="DM Mono" font-size="10">41%</text>
+        <text x="152" y="100" fill="var(--text-3)" font-family="DM Mono" font-size="10">41%</text>
+        <text x="272" y="84"  fill="var(--text-3)" font-family="DM Mono" font-size="10">55%</text>
+        <text x="392" y="66"  fill="var(--text-3)" font-family="DM Mono" font-size="10">67%</text>
+        <text x="492" y="44"  fill="var(--text-2)" font-family="DM Mono" font-size="10">79%</text>
+        <text x="592" y="44"  fill="var(--text-2)" font-family="DM Mono" font-size="10">79%</text>
+        <text x="692" y="22"  fill="var(--text-2)" font-family="DM Mono" font-size="10">83%</text>
+        <text x="772" y="22"  fill="#1a9960"  font-family="DM Mono" font-size="10" font-weight="500">83%</text>
+        <text x="28"  y="132" fill="var(--text-3)" font-family="DM Mono" font-size="9">Sep23</text>
+        <text x="148" y="132" fill="var(--text-3)" font-family="DM Mono" font-size="9">Nov23</text>
+        <text x="268" y="132" fill="var(--text-3)" font-family="DM Mono" font-size="9">Feb24</text>
+        <text x="388" y="132" fill="var(--text-3)" font-family="DM Mono" font-size="9">May24</text>
+        <text x="488" y="132" fill="var(--text-3)" font-family="DM Mono" font-size="9">Ago24</text>
+        <text x="588" y="132" fill="var(--text-3)" font-family="DM Mono" font-size="9">Nov24</text>
+        <text x="688" y="132" fill="var(--text-3)" font-family="DM Mono" font-size="9">Feb25</text>
+        <text x="768" y="132" fill="var(--text-3)" font-family="DM Mono" font-size="9">Mar26</text>
+      </svg>
+    </div>
+    <div class="two-col">
+      <div><div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-bottom:12px">↑ MEJORANDO</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between"><span class="t-blue t-mono" style="font-size:13px">NVDA</span><span style="font-family:var(--mono);font-size:11px;color:var(--green)">41% → 83% en 18m</span></div>
+          <div style="display:flex;justify-content:space-between"><span class="t-blue t-mono" style="font-size:13px">CRWD</span><span style="font-family:var(--mono);font-size:11px;color:var(--green)">52% → 79% en 12m</span></div>
+          <div style="display:flex;justify-content:space-between"><span class="t-blue t-mono" style="font-size:13px">MSCI</span><span style="font-family:var(--mono);font-size:11px;color:var(--green)">68% → 81% en 6m</span></div>
+        </div>
+      </div>
+      <div><div style="font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:12px">↓ DETERIORANDO</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between"><span class="t-blue t-mono" style="font-size:13px">NVO</span><span style="font-family:var(--mono);font-size:11px;color:var(--red)">74% → 54% en 8m</span></div>
+          <div style="display:flex;justify-content:space-between"><span class="t-blue t-mono" style="font-size:13px">ZTS</span><span style="font-family:var(--mono);font-size:11px;color:var(--red)">64% → 56% en 4m</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PAGE: SETTINGS ══ -->
+  <section class="page" id="page-settings">
+    <div class="ph"><div class="ph-title">Configuración</div><div class="ph-sub">Gestiona tu suscripción y fuentes de datos</div></div>
+    <div class="two-col">
+      <div>
+        <div class="section-label">MI SUSCRIPCIÓN</div>
+        <div style="font-size:22px;font-weight:600;margin-bottom:6px">Pro <span style="font-size:14px;color:var(--text-2);font-weight:400">· 5€/mes</span></div>
+        <div style="font-size:13px;color:var(--text-2);line-height:2">
+          ✓ Análisis ilimitados · 10 criterios ponderados<br>
+          ✓ Estimaciones consenso Wall St.<br>
+          ✓ Noticias en tiempo real (Perplexity)<br>
+          ✓ Earnings transcripts + análisis IA<br>
+          ✓ Screener 10Bagger completo<br>
+          ✓ Insider · Congress · Institucionales · Short<br>
+          ✓ DCF Wizard · Comparador · Score histórico<br>
+          ✓ Valor Terminal IA · FCF CAGR 5a
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:16px">Próxima facturación: 12 ABR 2026</div>
+      </div>
+      <div>
+        <div class="section-label">FUENTES DE DATOS ACTIVAS</div>
+        <div style="display:flex;flex-direction:column;gap:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px">Financial Modeling Prep</div><div style="font-size:11px;color:var(--text-3)">Fundamentales, estimaciones, insider</div></div><span class="tag green">Activo</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px">EODHD</div><div style="font-size:11px;color:var(--text-3)">Precios en tiempo real</div></div><span class="tag green">Activo</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px">Perplexity API</div><div style="font-size:11px;color:var(--text-3)">Noticias + sentiment en tiempo real</div></div><span class="tag green">Activo</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px">Quiver Quantitative</div><div style="font-size:11px;color:var(--text-3)">Insider + Congress trading</div></div><span class="tag green">Activo</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px">Browserless</div><div style="font-size:11px;color:var(--text-3)">Earnings call transcripts</div></div><span class="tag green">Activo</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0"><div><div style="font-size:13px">Claude Sonnet</div><div style="font-size:11px;color:var(--text-3)">Análisis IA · Valor Terminal · DCF</div></div><span class="tag green">Activo</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+// ─── API KEYS ────────────────────────────────────────────────
+const EODHD_KEY = '69a894bfd4ddf5.16069282';
+const FMP_KEY   = 'UfMwGk9iqXJuR8y6DYPgHX8nk2UUfAct'; // ← pega aquí tu key de FMP cuando la tengas
+
+// ─── EODHD ticker map (europeas necesitan sufijo) ─────────────
+const EODHD_MAP = {
+  'ASML':'ASML.AS','NVO':'NVO.US','SAP':'SAP.XETRA',
+  'SIE':'SIE.XETRA','MC':'MC.PA','OR':'OR.PA'
+};
+function toEodhd(t){ return EODHD_MAP[t] || t+'.US'; }
+
+// ─── NAVIGATION ──────────────────────────────────────────────
+function nav(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (page) page.classList.add('active');
+  const map = {
+    dashboard:'dashboard', analyzer:'analizador', screener:'screener',
+    alerts:'alertas', dcf:'dcf', earnings:'earnings', news:'news · sentiment',
+    comparator:'comparador', insider:'insider', congress:'congress',
+    institutional:'institucionales', short:'short', ideas:'tesis',
+    scorehistory:'score hist', settings:'configuración'
+  };
+  const label = map[id] || '';
+  document.querySelectorAll('.sb-item').forEach(item => {
+    if (label && item.textContent.trim().toLowerCase().includes(label))
+      item.classList.add('active');
+  });
+  window.scrollTo(0,0);
+}
+
+// ─── FETCH PRICE (FMP primario, EODHD fallback) ──────────────
+async function fetchPrice(ticker) {
+  // Intentar FMP primero (quote endpoint)
+  try {
+    const url = `https://financialmodelingprep.com/api/v3/quote/${ticker}?apikey=${FMP_KEY}`;
+    const r = await fetch(url);
+    if (r.ok) {
+      const data = await r.json();
+      if (data?.[0]) {
+        const q = data[0];
+        return {
+          close:      q.price,
+          previousClose: q.previousClose,
+          change_p:   q.changesPercentage,
+          change:     q.change,
+          open:       q.open,
+          high:       q.dayHigh,
+          low:        q.dayLow,
+          volume:     q.volume,
+          source:     'FMP'
+        };
+      }
+    }
+  } catch(e) {}
+
+  // Fallback EODHD si hay key
+  if (EODHD_KEY && EODHD_KEY !== 'TU_KEY_EODHD') {
+    try {
+      const sym = toEodhd(ticker);
+      const url = `https://eodhd.com/api/real-time/${sym}?api_token=${EODHD_KEY}&fmt=json`;
+      const r = await fetch(url);
+      if (r.ok) {
+        const d = await r.json();
+        d.source = 'EODHD';
+        return d;
+      }
+    } catch(e) {}
+  }
+
+  throw new Error(`No se pudo obtener precio para ${ticker}`);
+}
+
+// ─── FETCH FUNDAMENTALS (FMP) ────────────────────────────────
+async function fetchFMP(endpoint) {
+  if (!FMP_KEY) return null;
+  const url = `https://financialmodelingprep.com/api/v3/${endpoint}&apikey=${FMP_KEY}`;
+  const r = await fetch(url);
+  if (!r.ok) return null;
+  return await r.json();
+}
+
+async function fetchFMPv4(endpoint) {
+  if (!FMP_KEY) return null;
+  const url = `https://financialmodelingprep.com/api/v4/${endpoint}&apikey=${FMP_KEY}`;
+  const r = await fetch(url);
+  if (!r.ok) return null;
+  return await r.json();
+}
+
+// ─── SCORING ENGINE (10 criterios ponderados) ─────────────────
+// Pesos: 1.0 = criterio completo, 0.5 = criterio reducido
+// Criterios peso 1.0: 01 RevGrowth, 04 TAM, 05 ROE, 08 ValFwd, 09 ValTerminal, 10 FCF_CAGR
+// Criterios peso 0.5: 02 FCFConv, 03 Insider, 06 Dilution, 07 NetCash
+const MAX_SCORE = (6 * 14) + (4 * 7); // = 84+28 = 112 → normalizado a 100
+
+function calcScore(criteria) {
+  // criteria: array de {id, value, pass, neutral, weight}
+  // pass=1.0, neutral=0.5, fail=0.0
+  let earned = 0, possible = 0;
+  criteria.forEach(c => {
+    const pts = c.weight === 1.0 ? 14 : 7;
+    possible += pts;
+    if (c.pass === true)    earned += pts;
+    else if (c.neutral === true) earned += pts * 0.5;
+  });
+  return Math.round((earned / possible) * 100);
+}
+
+// ─── RENDER HELPERS ──────────────────────────────────────────
+function fmtPrice(p, currency='$') {
+  if (!p) return '—';
+  return currency + parseFloat(p).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function fmtPct(v) {
+  if (v === null || v === undefined) return '—';
+  const n = parseFloat(v) * 100;
+  return (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+}
+
+function colorClass(v, threshold, higherIsBetter=true) {
+  if (v === null || v === undefined) return '';
+  return (higherIsBetter ? v >= threshold : v <= threshold) ? 'green' : 'red';
+}
+
+function verdictLabel(score) {
+  if (score >= 70) return ['MERECE ATENCIÓN', 'pass'];
+  if (score >= 50) return ['REVISAR CON CAUTELA', 'warn'];
+  return ['NO PASA', 'fail'];
+}
+
+// ─── MAIN ANALYZER ───────────────────────────────────────────
+async function analyze(ticker) {
+  ticker = ticker.trim().toUpperCase();
+  if (!ticker) return;
+
+  nav('analyzer');
+
+  const titleEl = document.querySelector('#page-analyzer .ph-title');
+  const subEl   = document.querySelector('#page-analyzer .ph-sub');
+  titleEl.innerHTML = `Cargando análisis · <span style="color:var(--blue)">${ticker}</span>`;
+  subEl.textContent  = 'Obteniendo datos en tiempo real…';
+
+  showAnalyzerLoading(ticker);
+
+  try {
+    // 1. Precio real (EODHD)
+    let priceData = null;
+    try { priceData = await fetchPrice(ticker); } catch(e) {}
+
+    const price      = priceData?.close || priceData?.previousClose || null;
+    const changeP    = priceData?.change_p || null;
+    const priceStr   = price ? fmtPrice(price) : '—';
+    const changePct  = changeP !== null ? ((changeP >= 0 ? '+' : '') + parseFloat(changeP).toFixed(2) + '%') : '';
+    const changeColor = changeP >= 0 ? 'var(--green)' : 'var(--red)';
+    const changeArrow = changeP >= 0 ? '▲' : '▼';
+
+    // 2. Fundamentales (FMP) — si key disponible
+    let profile    = null, ratios   = null, income = null;
+    let cashflow   = null, balance  = null, insider = null;
+    let estimates  = null;
+
+    if (FMP_KEY !== 'TU_KEY_FMP_AQUI') {
+      const [profileR, ratiosR, incomeR, cashR, balR, insiderR, estR] = await Promise.all([
+        fetchFMP(`profile/${ticker}?`),
+        fetchFMP(`ratios-ttm/${ticker}?`),
+        fetchFMP(`income-statement/${ticker}?limit=5&`),
+        fetchFMP(`cash-flow-statement/${ticker}?limit=5&`),
+        fetchFMP(`balance-sheet-statement/${ticker}?limit=1&`),
+        fetchFMPv4(`insider-trading?symbol=${ticker}&limit=20`),
+        fetchFMP(`analyst-estimates/${ticker}?limit=3&`)
+      ]);
+      profile   = profileR?.[0]  || null;
+      ratios    = ratiosR?.[0]   || null;
+      income    = incomeR        || [];
+      cashflow  = cashR          || [];
+      balance   = balR?.[0]      || null;
+      insider   = insiderR       || [];
+      estimates = estR           || [];
+    }
+
+    // 3. Calcular criterios con datos reales (o simulados si no hay FMP)
+    const criteria = buildCriteria(ticker, price, profile, ratios, income, cashflow, balance, insider, estimates);
+    const score    = calcScore(criteria);
+    const [vLabel, vClass] = verdictLabel(score);
+
+    // 4. Render
+    renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeColor,
+                   profile, ratios, income, cashflow, balance, estimates,
+                   criteria, score, vLabel, vClass);
+
+    titleEl.innerHTML = `Análisis completo · <span style="color:var(--blue)">${ticker}</span>`;
+    subEl.textContent = profile
+      ? `${profile.companyName} · ${profile.exchangeShortName} · ${profile.sector} · FMP + EODHD + Claude`
+      : `${ticker} · EODHD precio real · Conecta FMP para fundamentales`;
+
+  } catch(err) {
+    console.error(err);
+    titleEl.innerHTML = `Error analizando <span style="color:var(--red)">${ticker}</span>`;
+    subEl.textContent = err.message;
+  }
+}
+
+// ─── BUILD CRITERIA ──────────────────────────────────────────
+function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance, insider, estimates) {
+  // Helpers
+  const safe = (v, fallback=null) => (v !== undefined && v !== null && !isNaN(v)) ? v : fallback;
+
+  // Rev growth YoY (últimos 2 años de income)
+  let revGrowth = null;
+  if (income?.length >= 2) {
+    const r0 = income[0].revenue, r1 = income[1].revenue;
+    if (r1 > 0) revGrowth = (r0 - r1) / r1;
+  }
+
+  // FCF conversion: FCF / EBITDA
+  let fcfConv = null;
+  if (cashflow?.length && income?.length) {
+    const fcf   = cashflow[0].freeCashFlow;
+    const ebitda = income[0].ebitda;
+    if (ebitda > 0) fcfConv = fcf / ebitda;
+  }
+
+  // Insider % of shares outstanding
+  let insiderPct = safe(profile?.insidersOwnershipPercentage);
+
+  // ROE TTM
+  let roe = safe(ratios?.returnOnEquityTTM);
+
+  // Dilution: shares change (negative = buyback = good)
+  let dilution = null;
+  if (income?.length >= 2) {
+    const s0 = income[0].weightedAverageShsOut, s1 = income[1].weightedAverageShsOut;
+    if (s1 > 0) dilution = (s0 - s1) / s1;
+  }
+
+  // Net cash: cash - total debt
+  let netCash = null;
+  if (balance) {
+    netCash = safe(balance.cashAndShortTermInvestments, 0) - safe(balance.totalDebt, 0);
+  }
+
+  // Forward PER: price / fwd EPS (estimates next year)
+  let fwdPER = null, epsNext = null;
+  if (estimates?.length && price) {
+    epsNext = estimates[0]?.estimatedEpsAvg || estimates[0]?.estimatedEps;
+    if (epsNext && epsNext > 0) fwdPER = price / epsNext;
+  }
+  // Valuation verdict
+  let valVerdict = null, valNeutral = false;
+  if (fwdPER !== null) {
+    if (fwdPER < 20)      valVerdict = true;
+    else if (fwdPER < 30) { valVerdict = false; valNeutral = true; }
+    else                  valVerdict = false;
+  }
+
+  // FCF CAGR 5 years
+  let fcfCagr = null;
+  if (cashflow?.length >= 5) {
+    const fcf0 = cashflow[0].freeCashFlow, fcf4 = cashflow[4].freeCashFlow;
+    if (fcf4 > 0 && fcf0 > 0) fcfCagr = Math.pow(fcf0 / fcf4, 1/4) - 1;
+  }
+
+  return [
+    { id:'01', name:'Crecimiento de Ingresos',    weight:1.0,
+      value: revGrowth !== null ? fmtPct(revGrowth) : '—',
+      raw: revGrowth,
+      pass: revGrowth !== null && revGrowth >= 0.15,
+      neutral: revGrowth !== null && revGrowth >= 0.05 && revGrowth < 0.15,
+      threshold:'≥15% PASA',
+      note: revGrowth !== null ? (revGrowth >= 0.15 ? 'Crecimiento 10Bagger.' : revGrowth >= 0.05 ? 'Crecimiento moderado, por debajo del umbral.' : 'Crecimiento bajo.') : 'Conecta FMP para dato real.' },
+
+    { id:'02', name:'Conversión EBITDA→FCF',      weight:0.5,
+      value: fcfConv !== null ? (fcfConv*100).toFixed(0)+'%' : '—',
+      raw: fcfConv,
+      pass: fcfConv !== null && fcfConv >= 0.60,
+      neutral: fcfConv !== null && fcfConv >= 0.40 && fcfConv < 0.60,
+      threshold:'≥60% PASA',
+      note: fcfConv !== null ? (fcfConv >= 0.60 ? 'Excelente generación de caja.' : 'Conversión mejorable.') : 'Conecta FMP para dato real.' },
+
+    { id:'03', name:'Alineación Directiva',        weight:0.5,
+      value: insiderPct !== null ? (insiderPct*100).toFixed(1)+'%' : '—',
+      raw: insiderPct,
+      pass: insiderPct !== null && insiderPct >= 0.05,
+      neutral: insiderPct !== null && insiderPct >= 0.02 && insiderPct < 0.05,
+      threshold:'≥5% PASA',
+      note: insiderPct !== null ? (insiderPct >= 0.05 ? 'Directivos con piel en el juego.' : 'Baja tenencia directiva.') : 'Conecta FMP para dato real.' },
+
+    { id:'04', name:'TAM & Modelo de Negocio',     weight:1.0,
+      value:'—', raw:null, pass:null, neutral:false,
+      threshold:'Cualitativo · Claude IA',
+      note:'Requiere análisis Claude para evaluación.' },
+
+    { id:'05', name:'ROE',                         weight:1.0,
+      value: roe !== null ? (roe*100).toFixed(1)+'%' : '—',
+      raw: roe,
+      pass: roe !== null && roe >= 0.20,
+      neutral: roe !== null && roe >= 0.10 && roe < 0.20,
+      threshold:'≥20% PASA',
+      note: roe !== null ? (roe >= 0.20 ? 'Ventaja competitiva demostrada.' : 'ROE por debajo del umbral.') : 'Conecta FMP para dato real.' },
+
+    { id:'06', name:'Dilución Accionarial',        weight:0.5,
+      value: dilution !== null ? fmtPct(dilution) : '—',
+      raw: dilution,
+      pass: dilution !== null && dilution <= 0.005,
+      neutral: dilution !== null && dilution > 0.005 && dilution <= 0.02,
+      threshold:'≤0.5% PASA (negativo = recompras)',
+      note: dilution !== null ? (dilution <= 0 ? 'Recompras activas. Excelente.' : dilution <= 0.005 ? 'Dilución mínima.' : 'Dilución relevante.') : 'Conecta FMP para dato real.' },
+
+    { id:'07', name:'Caja Neta / Balance',         weight:0.5,
+      value: netCash !== null ? (netCash >= 0 ? '+' : '') + (netCash/1e9).toFixed(1)+'B' : '—',
+      raw: netCash,
+      pass: netCash !== null && netCash >= 0,
+      neutral: netCash !== null && netCash < 0 && netCash > -5e9,
+      threshold:'Positivo PASA',
+      note: netCash !== null ? (netCash >= 0 ? 'Caja neta positiva.' : 'Deuda neta. Evaluar contexto.') : 'Conecta FMP para dato real.' },
+
+    { id:'08', name:'Valoración Forward 2026e',    weight:1.0,
+      value: fwdPER !== null ? fwdPER.toFixed(1)+'x PER' : '—',
+      raw: fwdPER,
+      pass: valVerdict === true,
+      neutral: valNeutral,
+      threshold:'PER <20x PASA · <30x NEUTRAL',
+      note: fwdPER !== null ? `PER forward ${fwdPER.toFixed(1)}x sobre EPS estimado ${epsNext ? '$'+epsNext.toFixed(2) : ''}` : 'Conecta FMP para estimaciones.' },
+
+    { id:'09', name:'Valor Terminal · Resiliencia IA', weight:1.0,
+      value:'—', raw:null, pass:null, neutral:false,
+      threshold:'ALTO / MEDIO / BAJO · Claude IA',
+      note:'Requiere análisis Claude para evaluación del moat.' },
+
+    { id:'10', name:'FCF CAGR 5 años',             weight:1.0,
+      value: fcfCagr !== null ? fmtPct(fcfCagr) : '—',
+      raw: fcfCagr,
+      pass: fcfCagr !== null && fcfCagr >= 0.10,
+      neutral: fcfCagr !== null && fcfCagr >= 0.05 && fcfCagr < 0.10,
+      threshold:'≥10% PASA',
+      note: fcfCagr !== null ? (fcfCagr >= 0.10 ? 'Crecimiento de caja consistente.' : 'FCF creciendo, pero lento.') : 'Necesita 5 años de datos FMP.' },
+  ];
+}
+
+// ─── SHOW LOADING STATE ──────────────────────────────────────
+function showAnalyzerLoading(ticker) {
+  const loading = `
+    <div style="display:flex;align-items:center;justify-content:center;padding:80px;gap:14px;color:var(--text-3)">
+      <div class="spin"></div>
+      <span style="font-family:var(--mono);font-size:13px">Obteniendo datos para ${ticker}…</span>
+    </div>`;
+  document.getElementById('analyzer-content').innerHTML = loading;
+}
+
+// ─── RENDER FULL ANALYZER PAGE ───────────────────────────────
+function renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeColor,
+                        profile, ratios, income, cashflow, balance, estimates,
+                        criteria, score, vLabel, vClass) {
+  const name = profile?.companyName || ticker;
+  const exch = profile?.exchangeShortName || '—';
+  const sect = profile?.sector || '—';
+  const indus= profile?.industry || '—';
+  const mktCap = profile?.mktCap ? '$'+(profile.mktCap/1e9).toFixed(1)+'B' : '—';
+  const range52 = profile ? `$${profile['52WeekLow']}–$${profile['52WeekHigh']}` : '—';
+  const beta  = profile?.beta ? parseFloat(profile.beta).toFixed(2) : '—';
+
+  // Forward PER for header display
+  const fwdCrit = criteria.find(c => c.id === '08');
+  const fwdVal  = fwdCrit?.value || '—';
+
+  // Score bar rows
+  const barRows = criteria.map(c => {
+    const pct = c.pass === true ? 100 : c.neutral === true ? 50 : c.pass === false ? 0 : 0;
+    const cls = c.pass === true ? 'pass' : c.neutral === true ? 'warn' : c.pass === false ? 'fail' : 'warn';
+    const wLabel = c.weight === 1.0 ? '1.0×' : '0.5×';
+    const maxPts = c.weight === 1.0 ? 14 : 7;
+    const earnPts= c.pass === true ? maxPts : c.neutral === true ? Math.round(maxPts*0.5) : 0;
+    const ptsColor = c.pass === true ? 'var(--green)' : c.neutral === true ? 'var(--amber)' : c.pass === false ? 'var(--red)' : 'var(--text-3)';
+    const labelStyle = c.weight === 0.5 ? 'color:var(--text-3)' : '';
+    return `
+      <div class="score-bar-row">
+        <span class="score-bar-label" style="${labelStyle}">${c.name}</span>
+        <div class="score-bar-track"><div class="score-bar-fill ${cls}" style="width:${pct}%"></div></div>
+        <span class="score-bar-pts" style="color:${ptsColor}">${earnPts}/${maxPts} pts <span class="score-bar-max">${wLabel}</span></span>
+      </div>`;
+  }).join('');
+
+  // Earned / possible for total
+  let totalEarned = 0, totalPossible = 0;
+  criteria.forEach(c => {
+    const pts = c.weight === 1.0 ? 14 : 7;
+    totalPossible += pts;
+    if (c.pass === true) totalEarned += pts;
+    else if (c.neutral === true) totalEarned += Math.round(pts * 0.5);
+  });
+  const totalBarPct = Math.round((totalEarned / totalPossible) * 100);
+  const totalColor  = score >= 70 ? 'var(--green)' : score >= 50 ? 'var(--amber)' : 'var(--red)';
+
+  // Criteria cells
+  const crCells = criteria.map(c => {
+    const cls  = c.pass === true ? 'pass' : c.neutral === true ? 'warn' : c.pass === false ? 'fail' : 'warn';
+    const badge= c.pass === true ? 'PASA' : c.neutral === true ? 'NEUTRAL' : c.pass === false ? 'FALLA' : 'PENDIENTE';
+    const wLabel = c.weight === 1.0 ? 'peso 1.0×' : 'peso 0.5×';
+    const wCls   = c.weight === 1.0 ? 'full' : 'half';
+    return `
+      <div class="cr-cell ${cls}">
+        <div class="cr-top"><span class="cr-num">${c.id}</span><span class="cr-weight ${wCls}">${wLabel}</span></div>
+        <div class="cr-name">${c.name}</div>
+        <div class="cr-val">${c.value}</div>
+        <div class="cr-threshold">${c.threshold}</div>
+        <div class="cr-note">${c.note}</div>
+        <div class="cr-badge">${badge}</div>
+      </div>`;
+  }).join('');
+
+  // Estimates table — real if available, placeholder if not
+  let estRows = '';
+  const years = ['2024 · REAL', '2025 · EST.', '2026 · EST.'];
+  if (estimates?.length >= 1 && income?.length >= 1) {
+    const rev24   = income[0]?.revenue;
+    const ebitda24= income[0]?.ebitda;
+    const fcf24   = cashflow?.[0]?.freeCashFlow;
+    const eps24   = income[0]?.eps;
+    const revG24  = income.length >= 2 ? (income[0].revenue - income[1].revenue) / income[1].revenue : null;
+
+    const mkRow = (label, v0, v1, v2, fmt) => `
+      <div class="est-row"><span class="est-k">${label}</span><span class="est-v">${fmt(v0)}</span></div>
+      <div class="est-row" style="display:none"></div>`;
+
+    const fmtB = v => v ? '$'+(v/1e9).toFixed(1)+'bn' : '—';
+    const fmtN = v => v ? '$'+parseFloat(v).toFixed(2) : '—';
+    const fmtP = v => v !== null ? fmtPct(v) : '—';
+
+    const col = (yr, rev, ebitda, fcf, eps, grow) => `
+      <div class="est-col">
+        <div class="est-yr">${yr}</div>
+        <div class="est-row"><span class="est-k">Ingresos</span><span class="est-v ${grow > 0 ? 'up':''}">${fmtB(rev)}</span></div>
+        <div class="est-row"><span class="est-k">EBITDA</span><span class="est-v">${fmtB(ebitda)}</span></div>
+        <div class="est-row"><span class="est-k">FCF</span><span class="est-v">${fmtB(fcf)}</span></div>
+        <div class="est-row"><span class="est-k">EPS</span><span class="est-v">${fmtN(eps)}</span></div>
+        <div class="est-row"><span class="est-k">Crec. Ing.</span><span class="est-v ${grow > 0 ? 'up':''}">${fmtP(grow)}</span></div>
+      </div>`;
+
+    const est0 = estimates[0] || {}, est1 = estimates[1] || {};
+    estRows = `
+      ${col('2024 · REAL', rev24, ebitda24, fcf24, eps24, revG24)}
+      ${col('2025E · CONSENSO', est0.estimatedRevenueAvg, est0.estimatedEbitdaAvg, est0.estimatedEbitdaAvg ? est0.estimatedEbitdaAvg*0.7:null, est0.estimatedEpsAvg, est0.estimatedRevenueAvg && rev24 ? (est0.estimatedRevenueAvg-rev24)/rev24 : null)}
+      ${col('2026E · CONSENSO', est1.estimatedRevenueAvg, est1.estimatedEbitdaAvg, est1.estimatedEbitdaAvg ? est1.estimatedEbitdaAvg*0.7:null, est1.estimatedEpsAvg, est0.estimatedRevenueAvg && est1.estimatedRevenueAvg ? (est1.estimatedRevenueAvg-est0.estimatedRevenueAvg)/est0.estimatedRevenueAvg : null)}`;
+  } else {
+    estRows = `<div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--text-3);font-family:var(--mono);font-size:12px">
+      Conecta tu API key de FMP para ver estimaciones reales de consenso Wall St.
+    </div>`;
+  }
+
+  const fmpNotice = false && FMP_KEY === 'DISABLED'
+    ? `<div class="cta-strip" style="margin-bottom:20px">
+        <strong>Precio real vía EODHD ✓</strong> · Para fundamentales, criterios y estimaciones reales, añade tu API key de FMP en el archivo (variable <code style="font-family:var(--mono);background:var(--s3);padding:1px 5px;border-radius:3px">FMP_KEY</code>).
+       </div>` : '';
+
+  document.getElementById('analyzer-content').innerHTML = `
+    ${fmpNotice}
+    <div class="two-col" style="margin-bottom:24px">
+      <div style="padding:24px 26px">
+        <div style="font-size:26px;font-weight:600;letter-spacing:-0.6px;margin-bottom:10px">${name}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+          <span class="tag blue">${ticker}</span>
+          <span class="tag blue">${exch}</span>
+          <span class="tag">${sect}</span>
+          <span class="tag">${indus}</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">
+          <span style="font-family:var(--mono);font-size:28px;font-weight:500">${priceStr}</span>
+          <span style="font-family:var(--mono);font-size:12px;color:${changeColor}">${changeArrow} ${changePct}</span>
+          <span id="price-source-label" style="font-family:var(--mono);font-size:10px;color:var(--text-3)">precio real · FMP</span>
+        </div>
+        <div style="display:flex;gap:20px;font-family:var(--mono);font-size:10px;color:var(--text-3);flex-wrap:wrap">
+          <span>Cap: <span style="color:var(--text)">${mktCap}</span></span>
+          <span>52W: <span style="color:var(--text)">${range52}</span></span>
+          <span>Beta: <span style="color:var(--text)">${beta}</span></span>
+          <span>PER fwd: <span style="color:var(--amber)">${fwdVal}</span></span>
+        </div>
+      </div>
+      <div style="background:var(--s2);padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-align:center;margin-bottom:8px;letter-spacing:1px">SCORE PONDERADO</div>
+          <div class="score-pct" style="color:${totalColor};text-align:center">${score}<span class="denom">%</span></div>
+        </div>
+        <div class="verdict ${vClass}">${vClass === 'pass' ? '✓' : vClass === 'warn' ? '◈' : '✗'} ${vLabel}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-align:center">
+          ${criteria.filter(c=>c.pass===true).length} PASAN · 
+          ${criteria.filter(c=>c.pass===false).length} FALLAN · 
+          ${criteria.filter(c=>c.neutral===true).length} NEUTROS
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-div"><span class="sec-div-title">Desglose de puntuación</span><div class="sec-div-line"></div><span class="sec-div-meta">PONDERADO · MAX 100%</span></div>
+    <div class="score-bar-wrap" style="margin-bottom:24px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:14px;display:flex;gap:16px">
+        <span style="color:var(--blue)">●</span> Peso completo (1.0×) &nbsp;
+        <span style="color:var(--text-3)">●</span> Peso reducido (0.5×)
+      </div>
+      ${barRows}
+      <div style="height:1px;background:var(--border);margin:12px 0"></div>
+      <div class="score-bar-row">
+        <span class="score-bar-label" style="font-weight:600;color:var(--text)">TOTAL PONDERADO</span>
+        <div class="score-bar-track"><div class="score-bar-fill ${vClass}" style="width:${totalBarPct}%;background:${totalColor}"></div></div>
+        <span class="score-bar-pts" style="color:${totalColor};font-weight:600">${totalEarned}/${totalPossible} → ${score}%</span>
+      </div>
+    </div>
+
+    <div class="sec-div"><span class="sec-div-title">10 Criterios 10Bagger</span><div class="sec-div-line"></div></div>
+    <div class="cr-grid">${crCells}</div>
+
+    <div class="sec-div"><span class="sec-div-title">Estimaciones financieras</span><div class="sec-div-line"></div><span class="sec-div-meta">FMP + CONSENSO WALL ST.</span></div>
+    <div class="est-grid" style="margin-bottom:24px">${estRows}</div>
+
+    <div class="analysis-block" style="border-left-color:var(--text-3)">
+      <div class="ab-tag">ANÁLISIS EDITORIAL · CLAUDE SONNET · PENDIENTE</div>
+      <div class="ab-title" style="color:var(--text-2)">Conecta Claude API para análisis editorial completo</div>
+      <div class="ab-body">
+        <p>El análisis editorial, la evaluación de TAM, Valor Terminal / Resiliencia IA y la tesis de inversión se generan con Claude Sonnet. Añade tu Anthropic API key para activar esta funcionalidad.</p>
+      </div>
+    </div>`;
+}
+
+// ─── SEARCH TRIGGER ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.querySelector('.search-wrap input');
+  const btn   = document.querySelector('.search-btn');
+  const go = () => { const t = input?.value?.trim(); if (t) analyze(t); };
+  btn?.addEventListener('click', go);
+  input?.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+
+  // Inject analyzer-content wrapper into static page
+  const analyzerPage = document.getElementById('page-analyzer');
+  if (analyzerPage) {
+    const existingContent = analyzerPage.querySelector('.ph');
+    const wrapper = document.createElement('div');
+    wrapper.id = 'analyzer-content';
+    // Move all children after .ph into wrapper
+    let node = existingContent?.nextElementSibling;
+    while (node) {
+      const next = node.nextElementSibling;
+      wrapper.appendChild(node);
+      node = next;
+    }
+    analyzerPage.appendChild(wrapper);
+  }
+});
+
+// ─── SPIN ANIMATION ──────────────────────────────────────────
+const style = document.createElement('style');
+style.textContent = `
+  .spin { width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);
+    border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  code { font-family: var(--mono); }
+`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>
