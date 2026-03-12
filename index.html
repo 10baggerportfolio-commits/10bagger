@@ -1398,6 +1398,19 @@ async function fmpProfile(ticker) {
   } catch(e) { return null; }
 }
 
+// ─── STOCKANALYSIS SCRAPER (fundamentales gratis) ─────────────
+async function saFetchData(ticker, path) {
+  const url = 'https://stockanalysis.com/stocks/' + ticker.toLowerCase() + path;
+  try {
+    const resp = await fetch(PROXY + encodeURIComponent(url));
+    const html = await resp.text();
+    const startIdx = html.indexOf('financialData:');
+    const mapIdx   = html.indexOf(',map:', startIdx);
+    if (startIdx === -1 || mapIdx === -1) return null;
+    return JSON.parse(html.slice(startIdx + 14, mapIdx));
+  } catch(e) { console.warn('SA error:', path, e.message); return null; }
+}
+
 // ─── SCORING ENGINE (10 criterios ponderados) ─────────────────
 // Pesos: 1.0 = criterio completo, 0.5 = criterio reducido
 // Criterios peso 1.0: 01 RevGrowth, 04 TAM, 05 ROE, 08 ValFwd, 09 ValTerminal, 10 FCF_CAGR
@@ -1466,13 +1479,18 @@ async function analyze(ticker) {
     const changeColor = changeP >= 0 ? 'var(--green)' : 'var(--red)';
     const changeArrow = changeP >= 0 ? '▲' : '▼';
 
-    // 2. Fundamentales — profile gratuito FMP
-    // Criterios de ingresos/FCF/balance requieren FMP Starter (14/mes)
+    // 2. Fundamentales — FMP profile + StockAnalysis scraping (100% gratis)
     let profile = null, ratios = null, income = [];
     let cashflow = [], balance = null, insider = [], estimates = [];
 
     try {
-      const profData = await fmpProfile(ticker);
+      const [profData, incData, balData, ratData] = await Promise.all([
+        fmpProfile(ticker),
+        saFetchData(ticker, '/financials/'),
+        saFetchData(ticker, '/financials/balance-sheet/'),
+        saFetchData(ticker, '/financials/ratios/')
+      ]);
+
       if (profData && profData.symbol) {
         const range = profData.range ? profData.range.split('-') : [];
         profile = {
@@ -1492,8 +1510,41 @@ async function analyze(ticker) {
           employees:         profData.fullTimeEmployees || '-',
         };
       }
+
+      if (incData && incData.revenue) {
+        const n = Math.min((incData.revenue.length || 1) - 1, 5);
+        for (let i = 1; i <= n; i++) {
+          income.push({
+            revenue: incData.revenue[i] || 0,
+            ebitda:  incData.ebitda ? incData.ebitda[i] : 0,
+            eps:     incData.epsDiluted ? incData.epsDiluted[i] : null,
+            weightedAverageShsOut: incData.sharesDiluted ? incData.sharesDiluted[i] : 0,
+            date:    incData.fiscalYear ? incData.fiscalYear[i] : '',
+          });
+        }
+        if (incData.fcf) {
+          cashflow = income.map((_, i) => ({
+            freeCashFlow: incData.fcf[i+1] || 0,
+            operatingCashFlow: 0, capitalExpenditures: 0,
+          }));
+        }
+      }
+
+      if (balData && balData.cash) {
+        balance = {
+          cashAndShortTermInvestments: balData.cash[1] || 0,
+          totalDebt: balData.totalDebt ? balData.totalDebt[1] : 0,
+        };
+      }
+
+      if (ratData) {
+        if (ratData.roe) ratios = { returnOnEquityTTM: ratData.roe[1] || null };
+        if (ratData.insiderOwnership && profile)
+          profile.insidersOwnershipPercentage = ratData.insiderOwnership[1] || null;
+      }
+
     } catch(e) {
-      console.warn('FMP profile error:', e.message);
+      console.warn('Fundamentals error:', e.message);
     }
 
     // 3. Calcular criterios con datos reales (o simulados si no hay FMP)
