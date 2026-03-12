@@ -1407,7 +1407,8 @@ async function saFetchData(ticker, path) {
     const startIdx = html.indexOf('financialData:');
     const mapIdx   = html.indexOf(',map:', startIdx);
     if (startIdx === -1 || mapIdx === -1) return null;
-    return JSON.parse(html.slice(startIdx + 14, mapIdx));
+    const raw = html.slice(startIdx + 14, mapIdx);
+    return (new Function('return (' + raw + ')'))();
   } catch(e) { console.warn('SA error:', path, e.message); return null; }
 }
 
