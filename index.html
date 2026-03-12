@@ -1323,8 +1323,13 @@ body {
 
 <script>
 // ─── API KEYS ────────────────────────────────────────────────
-const EODHD_KEY = '69a894bfd4ddf5.16069282';
-const FMP_KEY   = 'UfMwGk9iqXJuR8y6DYPgHX8nk2UUfAct'; // ← pega aquí tu key de FMP cuando la tengas
+const EODHD_KEY = '69a894bfd4ddf5.16069282'; // opcional
+const FMP_KEY   = 'UfMwGk9iqXJuR8y6DYPgHX8nk2UUfAct'; // opcional
+const PROXY     = 'https://10bagger-proxy.10baggerportfolio.workers.dev/?url=';
+
+// Yahoo Finance no necesita key — acceso libre
+const YF_BASE   = 'https://query1.finance.yahoo.com/v8/finance/chart/';
+const YF_BASE2  = 'https://query2.finance.yahoo.com/v10/finance/quoteSummary/';
 
 // ─── EODHD ticker map (europeas necesitan sufijo) ─────────────
 const EODHD_MAP = {
@@ -1359,9 +1364,8 @@ async function fetchPrice(ticker) {
   // Intentar FMP primero (quote endpoint)
   try {
     const url = `https://financialmodelingprep.com/api/v3/quote/${ticker}?apikey=${FMP_KEY}`;
-    const r = await fetch(url);
-    if (r.ok) {
-      const data = await r.json();
+    const data = await proxyFetch(url);
+    if (data) {
       if (data?.[0]) {
         const q = data[0];
         return {
@@ -1376,7 +1380,6 @@ async function fetchPrice(ticker) {
           source:     'FMP'
         };
       }
-    }
   } catch(e) {}
 
   // Fallback EODHD si hay key
@@ -1384,12 +1387,8 @@ async function fetchPrice(ticker) {
     try {
       const sym = toEodhd(ticker);
       const url = `https://eodhd.com/api/real-time/${sym}?api_token=${EODHD_KEY}&fmt=json`;
-      const r = await fetch(url);
-      if (r.ok) {
-        const d = await r.json();
-        d.source = 'EODHD';
-        return d;
-      }
+      const d = await proxyFetch(url);
+      if (d) { d.source = 'EODHD'; return d; }
     } catch(e) {}
   }
 
@@ -1397,20 +1396,37 @@ async function fetchPrice(ticker) {
 }
 
 // ─── FETCH FUNDAMENTALS (FMP) ────────────────────────────────
-async function fetchFMP(endpoint) {
-  if (!FMP_KEY) return null;
-  const url = `https://financialmodelingprep.com/api/v3/${endpoint}&apikey=${FMP_KEY}`;
-  const r = await fetch(url);
-  if (!r.ok) return null;
+async function proxyFetch(url) {
+  const proxy = PROXY + encodeURIComponent(url);
+  const r = await fetch(proxy);
+  if (!r.ok) throw new Error('Proxy error ' + r.status);
   return await r.json();
 }
 
-async function fetchFMPv4(endpoint) {
-  if (!FMP_KEY) return null;
-  const url = `https://financialmodelingprep.com/api/v4/${endpoint}&apikey=${FMP_KEY}`;
-  const r = await fetch(url);
-  if (!r.ok) return null;
-  return await r.json();
+// ─── YAHOO FINANCE FETCHERS ───────────────────────────────────
+async function yfChart(ticker) {
+  // Precio + info básica
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
+  try { return await proxyFetch(url); } catch(e) { return null; }
+}
+
+async function yfSummary(ticker, modules) {
+  // Fundamentales: financialData, defaultKeyStatistics, incomeStatementHistory, etc.
+  const url = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${ticker}?modules=${modules.join(',')}`;
+  try { return await proxyFetch(url); } catch(e) { return null; }
+}
+
+async function yfFundamentals(ticker) {
+  return await yfSummary(ticker, [
+    'financialData',
+    'defaultKeyStatistics',
+    'incomeStatementHistory',
+    'cashflowStatementHistory',
+    'balanceSheetHistory',
+    'earningsTrend',
+    'summaryDetail',
+    'assetProfile'
+  ]);
 }
 
 // ─── SCORING ENGINE (10 criterios ponderados) ─────────────────
@@ -1481,28 +1497,81 @@ async function analyze(ticker) {
     const changeColor = changeP >= 0 ? 'var(--green)' : 'var(--red)';
     const changeArrow = changeP >= 0 ? '▲' : '▼';
 
-    // 2. Fundamentales (FMP) — si key disponible
-    let profile    = null, ratios   = null, income = null;
-    let cashflow   = null, balance  = null, insider = null;
-    let estimates  = null;
+    // 2. Fundamentales (Yahoo Finance) — gratis, sin key
+    let profile = null, ratios = null, income = [];
+    let cashflow = [], balance = null, insider = [], estimates = [];
+    let yfData = null;
 
-    if (FMP_KEY !== 'TU_KEY_FMP_AQUI') {
-      const [profileR, ratiosR, incomeR, cashR, balR, insiderR, estR] = await Promise.all([
-        fetchFMP(`profile/${ticker}?`),
-        fetchFMP(`ratios-ttm/${ticker}?`),
-        fetchFMP(`income-statement/${ticker}?limit=5&`),
-        fetchFMP(`cash-flow-statement/${ticker}?limit=5&`),
-        fetchFMP(`balance-sheet-statement/${ticker}?limit=1&`),
-        fetchFMPv4(`insider-trading?symbol=${ticker}&limit=20`),
-        fetchFMP(`analyst-estimates/${ticker}?limit=3&`)
-      ]);
-      profile   = profileR?.[0]  || null;
-      ratios    = ratiosR?.[0]   || null;
-      income    = incomeR        || [];
-      cashflow  = cashR          || [];
-      balance   = balR?.[0]      || null;
-      insider   = insiderR       || [];
-      estimates = estR           || [];
+    try {
+      yfData = await yfFundamentals(ticker);
+      const r = yfData?.quoteSummary?.result?.[0];
+      if (r) {
+        const fd  = r.financialData        || {};
+        const ks  = r.defaultKeyStatistics || {};
+        const ap  = r.assetProfile         || {};
+        const sd  = r.summaryDetail        || {};
+
+        // Build profile-like object
+        profile = {
+          companyName:              ks.enterpriseValue ? ticker : ticker,
+          symbol:                   ticker,
+          exchangeShortName:        priceData?.exchange || '—',
+          sector:                   ap.sector   || '—',
+          industry:                 ap.industry || '—',
+          mktCap:                   sd.marketCap?.raw || null,
+          beta:                     sd.beta?.raw || null,
+          '52WeekLow':              sd.fiftyTwoWeekLow?.raw  || '—',
+          '52WeekHigh':             sd.fiftyTwoWeekHigh?.raw || '—',
+          insidersOwnershipPercentage: ks.heldPercentInsiders?.raw || null,
+          companyNameFull:          ap.longName || ticker,
+        };
+
+        // Build ratios-like object
+        ratios = {
+          returnOnEquityTTM: fd.returnOnEquity?.raw || null,
+          currentRatioTTM:   fd.currentRatio?.raw   || null,
+          debtToEquityTTM:   fd.debtToEquity?.raw   || null,
+        };
+
+        // Income statements
+        const incStmts = r.incomeStatementHistory?.incomeStatementHistory || [];
+        income = incStmts.map(s => ({
+          revenue:                s.totalRevenue?.raw       || 0,
+          ebitda:                 s.ebitda?.raw             || 0,
+          eps:                    s.basicEPS?.raw           || null,
+          weightedAverageShsOut:  s.basicAverageShares?.raw || 0,
+          date:                   s.endDate?.fmt            || '',
+        }));
+
+        // Cashflow statements
+        const cfStmts = r.cashflowStatementHistory?.cashflowStatementHistory || [];
+        cashflow = cfStmts.map(s => ({
+          freeCashFlow:           (s.totalCashFromOperatingActivities?.raw || 0) - (s.capitalExpenditures?.raw || 0),
+          operatingCashFlow:      s.totalCashFromOperatingActivities?.raw || 0,
+          capitalExpenditures:    s.capitalExpenditures?.raw || 0,
+        }));
+
+        // Balance sheet
+        const balStmts = r.balanceSheetHistory?.balanceSheetStatements || [];
+        if (balStmts[0]) {
+          balance = {
+            cashAndShortTermInvestments: balStmts[0].cash?.raw || 0,
+            totalDebt: (balStmts[0].shortLongTermDebt?.raw || 0) + (balStmts[0].longTermDebt?.raw || 0),
+          };
+        }
+
+        // Estimates from earningsTrend
+        const trends = r.earningsTrend?.trend || [];
+        estimates = trends
+          .filter(t => t.period === '+1y' || t.period === '+2y' || t.period === '0y')
+          .map(t => ({
+            estimatedEpsAvg:     t.earningsEstimate?.avg?.raw     || null,
+            estimatedRevenueAvg: t.revenueEstimate?.avg?.raw      || null,
+            estimatedEbitdaAvg:  null,
+          }));
+      }
+    } catch(e) {
+      console.warn('Yahoo fundamentals error:', e.message);
     }
 
     // 3. Calcular criterios con datos reales (o simulados si no hay FMP)
@@ -1521,9 +1590,14 @@ async function analyze(ticker) {
       : `${ticker} · EODHD precio real · Conecta FMP para fundamentales`;
 
   } catch(err) {
-    console.error(err);
+    console.error('Analyze error:', err);
     titleEl.innerHTML = `Error analizando <span style="color:var(--red)">${ticker}</span>`;
     subEl.textContent = err.message;
+    document.getElementById('analyzer-content').innerHTML = `
+      <div class="cta-strip" style="border-color:var(--red-bg)">
+        <strong style="color:var(--red)">Error: ${err.message}</strong><br>
+        <span style="font-size:12px">Abre F12 → Console para ver el detalle. Lo más probable es un error CORS o límite de API.</span>
+      </div>`;
   }
 }
 
@@ -1678,7 +1752,7 @@ function showAnalyzerLoading(ticker) {
 function renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeColor,
                         profile, ratios, income, cashflow, balance, estimates,
                         criteria, score, vLabel, vClass) {
-  const name = profile?.companyName || ticker;
+  const name = profile?.companyNameFull || profile?.companyName || ticker;
   const exch = profile?.exchangeShortName || '—';
   const sect = profile?.sector || '—';
   const indus= profile?.industry || '—';
@@ -1793,7 +1867,7 @@ function renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeC
         <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">
           <span style="font-family:var(--mono);font-size:28px;font-weight:500">${priceStr}</span>
           <span style="font-family:var(--mono);font-size:12px;color:${changeColor}">${changeArrow} ${changePct}</span>
-          <span id="price-source-label" style="font-family:var(--mono);font-size:10px;color:var(--text-3)">precio real · FMP</span>
+          <span id="price-source-label" style="font-family:var(--mono);font-size:10px;color:var(--text-3)">precio real · Yahoo Finance</span>
         </div>
         <div style="display:flex;gap:20px;font-family:var(--mono);font-size:10px;color:var(--text-3);flex-wrap:wrap">
           <span>Cap: <span style="color:var(--text)">${mktCap}</span></span>
