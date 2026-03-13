@@ -702,76 +702,70 @@ body {
   <section class="page active" id="page-dashboard">
     <div class="ph">
       <div class="ph-title">Dashboard</div>
-      <div class="ph-sub">Miércoles 12 marzo 2026 · 9 valores en watchlist · 3 alertas sin revisar</div>
+      <div class="ph-sub" id="dashboard-sub">Tu watchlist personal · Análisis 10Bagger en tiempo real</div>
     </div>
 
-    <div class="tags-row">
-      <span class="tag blue"><span class="tag-dot" style="background:var(--green)"></span>FMP · Real time</span>
-      <span class="tag blue"><span class="tag-dot" style="background:var(--blue)"></span>Estimaciones Wall St.</span>
-      <span class="tag blue"><span class="tag-dot" style="background:var(--cyan)"></span>Claude Sonnet · IA</span>
-      <span class="tag blue"><span class="tag-dot" style="background:var(--amber)"></span>Perplexity · Noticias</span>
-      <span class="tag blue"><span class="tag-dot" style="background:var(--text-3)"></span>Earnings transcripts</span>
-    </div>
-
-    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)" id="dashboard-kpis">
+      <div class="kpi-cell">
+        <div class="kpi-label">Valores en watchlist</div>
+        <div class="kpi-val" id="kpi-total" style="color:var(--blue)">0</div>
+        <div class="kpi-meta">Añade tickers abajo</div>
+      </div>
       <div class="kpi-cell">
         <div class="kpi-label">Score medio</div>
-        <div class="kpi-val green">73<span style="font-size:16px;color:var(--text-2);font-weight:400">%</span></div>
-        <div class="kpi-meta">↑ +5pp vs mes anterior</div>
+        <div class="kpi-val" id="kpi-score" style="color:var(--text-2)">—</div>
+        <div class="kpi-meta" id="kpi-score-meta">Sin datos aún</div>
       </div>
       <div class="kpi-cell">
-        <div class="kpi-label">Oportunidades</div>
-        <div class="kpi-val blue">3</div>
-        <div class="kpi-meta">NVDA · MSCI · CRWD → PASAN</div>
+        <div class="kpi-label">Pasan criterios</div>
+        <div class="kpi-val green" id="kpi-pass">0</div>
+        <div class="kpi-meta">Score ≥70%</div>
       </div>
       <div class="kpi-cell">
-        <div class="kpi-label">Alertas activas</div>
-        <div class="kpi-val" style="color:var(--text)">12</div>
-        <div class="kpi-meta" style="color:var(--green)">3 nuevas hoy</div>
-      </div>
-      <div class="kpi-cell">
-        <div class="kpi-label">Earnings próx. 30d</div>
-        <div class="kpi-val" style="color:var(--text)">5</div>
-        <div class="kpi-meta">ZTS · NVO · ASML · MSCI · CRWD</div>
+        <div class="kpi-label">Revisar</div>
+        <div class="kpi-val" style="color:var(--amber)" id="kpi-warn">0</div>
+        <div class="kpi-meta">Score 50–70%</div>
       </div>
     </div>
 
-    <div class="two-col">
-      <div>
-        <div class="sec-div"><span class="sec-div-title">Watchlist</span><div class="sec-div-line"></div><span class="sec-div-meta">9 VALORES</span></div>
-        <div class="wl-row head">
-          <span class="wl-head-cell">Ticker</span>
-          <span class="wl-head-cell">Empresa</span>
-          <span class="wl-head-cell" style="text-align:right">Precio</span>
-          <span class="wl-head-cell" style="text-align:center">Score</span>
-          <span class="wl-head-cell" style="text-align:center">Var.</span>
-          <span class="wl-head-cell" style="text-align:center">Alerta</span>
-        </div>
-        <div class="wl-row" onclick="nav('analyzer')"><span class="wl-ticker">NVDA</span><span class="wl-name">NVIDIA Corp.</span><span class="wl-price">$875.40</span><span style="text-align:center"><span class="score-chip h">83%</span></span><span style="text-align:center"><span class="pct-pill up">+2.1%</span></span><span style="text-align:center"><div class="alert-led on"></div></span></div>
-        <div class="wl-row" onclick="nav('analyzer')"><span class="wl-ticker">MSCI</span><span class="wl-name">MSCI Inc.</span><span class="wl-price">$526.20</span><span style="text-align:center"><span class="score-chip h">81%</span></span><span style="text-align:center"><span class="pct-pill up">+0.8%</span></span><span style="text-align:center"><div class="alert-led on"></div></span></div>
-        <div class="wl-row" onclick="nav('analyzer')"><span class="wl-ticker">CRWD</span><span class="wl-name">CrowdStrike</span><span class="wl-price">$312.80</span><span style="text-align:center"><span class="score-chip h">79%</span></span><span style="text-align:center"><span class="pct-pill up">+3.2%</span></span><span style="text-align:center"><div class="alert-led on"></div></span></div>
-        <div class="wl-row"><span class="wl-ticker">ASML</span><span class="wl-name">ASML Holding</span><span class="wl-price">$680.10</span><span style="text-align:center"><span class="score-chip m">68%</span></span><span style="text-align:center"><span class="pct-pill up">+1.4%</span></span><span style="text-align:center"><div class="alert-led off"></div></span></div>
-        <div class="wl-row" onclick="nav('analyzer')"><span class="wl-ticker">ZTS</span><span class="wl-name">Zoetis</span><span class="wl-price">$155.50</span><span style="text-align:center"><span class="score-chip m">56%</span></span><span style="text-align:center"><span class="pct-pill down">-1.2%</span></span><span style="text-align:center"><div class="alert-led on"></div></span></div>
-        <div class="wl-row"><span class="wl-ticker">NVO</span><span class="wl-name">Novo Nordisk</span><span class="wl-price">$68.40</span><span style="text-align:center"><span class="score-chip m">54%</span></span><span style="text-align:center"><span class="pct-pill down">-0.6%</span></span><span style="text-align:center"><div class="alert-led off"></div></span></div>
-      </div>
-      <div>
-        <div class="sec-div"><span class="sec-div-title">Noticias · IA</span><div class="sec-div-line"></div><span class="sec-div-meta">PERPLEXITY · TIEMPO REAL</span></div>
-        <div class="news-item"><div class="news-meta"><span class="tag green">NVDA</span><span class="tag" style="font-size:10px">Reuters</span><span class="news-time">14 min</span></div><div class="news-headline">NVIDIA anuncia Blackwell Ultra con 50% más rendimiento en inferencia de LLMs</div><div class="news-sentiment" style="color:var(--green)">▲ Muy positivo · Score podría subir</div></div>
-        <div class="news-item"><div class="news-meta"><span class="tag amber">ZTS</span><span class="tag" style="font-size:10px">Bloomberg</span><span class="news-time">2h</span></div><div class="news-headline">Zoetis Q4: EPS en línea, guidance 2026 ligeramente por debajo del consenso</div><div class="news-sentiment" style="color:var(--red)">▼ Negativo · Guidance débil</div></div>
-        <div class="news-item"><div class="news-meta"><span class="tag green">CRWD</span><span class="tag" style="font-size:10px">TechCrunch</span><span class="news-time">6h</span></div><div class="news-headline">CrowdStrike gana contrato federal de $400M con el Departamento de Defensa</div><div class="news-sentiment" style="color:var(--green)">▲ Muy positivo · Catalizador directo</div></div>
-        <div class="news-item"><div class="news-meta"><span class="tag blue">MSCI</span><span class="tag" style="font-size:10px">WSJ</span><span class="news-time">4h</span></div><div class="news-headline">MSCI gana cuota en índices ESG mientras fondos pasivos aceleran adopción global</div><div class="news-sentiment" style="color:var(--green)">▲ Positivo · Expansión TAM confirmada</div></div>
-      </div>
+    <div class="sec-div" style="margin-top:8px">
+      <span class="sec-div-title">Mi Watchlist</span>
+      <div class="sec-div-line"></div>
+      <span class="sec-div-meta" id="wl-count">0 VALORES</span>
     </div>
 
-    <div class="sec-div" style="margin-top:8px"><span class="sec-div-title">Earnings Calendar</span><div class="sec-div-line"></div><span class="sec-div-meta">PRÓXIMOS 30 DÍAS</span></div>
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
-      <div style="background:var(--s1);padding:14px 16px"><div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:5px">18 MAR</div><div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--blue)">ZTS</div><div style="font-size:11px;color:var(--text-3);margin-top:3px">Q1 2026E</div><div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px">EPS est: $1.38</div></div>
-      <div style="background:var(--s1);padding:14px 16px"><div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:5px">21 MAR</div><div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--blue)">NVO</div><div style="font-size:11px;color:var(--text-3);margin-top:3px">Q4 2025E</div><div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px">EPS est: $0.96</div></div>
-      <div style="background:var(--s1);padding:14px 16px"><div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:5px">25 MAR</div><div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--blue)">ASML</div><div style="font-size:11px;color:var(--text-3);margin-top:3px">Q1 2026E</div><div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px">EPS est: €4.12</div></div>
-      <div style="background:var(--s2);border:1px solid var(--border-hi);padding:14px 16px"><div style="font-family:var(--mono);font-size:9px;color:var(--blue);margin-bottom:5px">2 ABR · próximo</div><div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--blue)">MSCI</div><div style="font-size:11px;color:var(--text-3);margin-top:3px">Q1 2026E</div><div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px">EPS est: $4.87</div></div>
-      <div style="background:var(--s1);padding:14px 16px"><div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:5px">8 ABR</div><div style="font-family:var(--mono);font-size:16px;font-weight:500;color:var(--blue)">CRWD</div><div style="font-size:11px;color:var(--text-3);margin-top:3px">Q1 FY2027E</div><div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px">EPS est: $0.94</div></div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+      <input id="wl-input" type="text" placeholder="Añadir ticker (ej: MSCI)" 
+        style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;width:200px;text-transform:uppercase"
+        onkeydown="if(event.key==='Enter')addToWatchlist()">
+      <button onclick="addToWatchlist()" 
+        style="background:var(--blue);color:#fff;border:none;border-radius:var(--r);padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer">
+        + Añadir
+      </button>
+      <button onclick="refreshWatchlist()" 
+        style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;font-size:12px;color:var(--text-2);cursor:pointer">
+        ↻ Actualizar precios
+      </button>
     </div>
+
+    <div id="wl-empty" style="display:none;text-align:center;padding:40px;color:var(--text-3);font-size:13px">
+      Tu watchlist está vacía. Añade tickers arriba para empezar el seguimiento.
+    </div>
+
+    <div id="wl-table" style="display:none">
+      <div class="wl-row head">
+        <span class="wl-head-cell">Ticker</span>
+        <span class="wl-head-cell">Empresa</span>
+        <span class="wl-head-cell" style="text-align:right">Precio</span>
+        <span class="wl-head-cell" style="text-align:center">Score</span>
+        <span class="wl-head-cell" style="text-align:center">Veredicto</span>
+        <span class="wl-head-cell" style="text-align:center">Acción</span>
+      </div>
+      <div id="wl-rows"></div>
+    </div>
+
   </section>
+  <section
 
   <!-- ══ PAGE: ANALYZER (10 weighted criteria) ══ -->
   <section class="page" id="page-analyzer">
@@ -1613,7 +1607,11 @@ async function analyze(ticker) {
                      profile, ratios, income, cashflow, balance, estimates,
                      criteria, newScore, newVLabel, newVClass, claudeResult.editorial);
 
-      titleEl.innerHTML = `Análisis completo · <span style="color:var(--blue)">${ticker}</span>`;
+      const inWL = getWatchlist().find(w => w.ticker === ticker);
+      const wlBtn = inWL
+        ? `<button onclick="removeFromWatchlist('${ticker}')" style="margin-left:12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:4px 12px;font-size:11px;color:var(--text-2);cursor:pointer">✕ Quitar de watchlist</button>`
+        : `<button onclick="addTickerToWatchlist('${ticker}')" style="margin-left:12px;background:var(--blue);border:none;border-radius:var(--r);padding:4px 12px;font-size:11px;color:#fff;cursor:pointer">+ Añadir a watchlist</button>`;
+      titleEl.innerHTML = `Análisis completo · <span style="color:var(--blue)">${ticker}</span>${wlBtn}`;
       subEl.textContent = profile
         ? `${profile.companyName} · ${profile.exchangeShortName} · ${profile.sector} · FMP + StockAnalysis + Claude`
         : `${ticker} · StockAnalysis + Claude IA`;
@@ -2045,6 +2043,209 @@ function renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeC
       <div class="ab-title" style="color:var(--text-2)">Generando tesis de inversión con IA...</div>
     </div>`}`;
 }
+
+// ─── WATCHLIST ───────────────────────────────────────────────
+function getWatchlist() {
+  try { return JSON.parse(localStorage.getItem('watchlist_v2') || '[]'); } catch(e) { return []; }
+}
+function saveWatchlist(wl) {
+  localStorage.setItem('watchlist_v2', JSON.stringify(wl));
+}
+
+function addTickerToWatchlist(ticker) {
+  const wl = getWatchlist();
+  if (wl.find(w => w.ticker === ticker)) return;
+  wl.push({ ticker, name: ticker, price: null, change: null, score: null, verdict: null, ts: Date.now() });
+  saveWatchlist(wl);
+  analyzeForWatchlist(ticker);
+  // Refrescar botón si estamos en el analizador
+  const titleEl = document.querySelector('#page-analyzer .ph-title');
+  if (titleEl) {
+    const wlBtn = `<button onclick="removeFromWatchlist('${ticker}')" style="margin-left:12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:4px 12px;font-size:11px;color:var(--text-2);cursor:pointer">✕ Quitar de watchlist</button>`;
+    titleEl.innerHTML = `Análisis completo · <span style="color:var(--blue)">${ticker}</span>${wlBtn}`;
+  }
+}
+
+function addToWatchlist() {
+  const input = document.getElementById('wl-input');
+  const ticker = (input?.value || '').trim().toUpperCase();
+  if (!ticker) return;
+  const wl = getWatchlist();
+  if (wl.find(w => w.ticker === ticker)) {
+    alert(ticker + ' ya está en tu watchlist');
+    return;
+  }
+  wl.push({ ticker, name: ticker, price: null, change: null, score: null, verdict: null, ts: Date.now() });
+  saveWatchlist(wl);
+  input.value = '';
+  renderDashboard();
+  // Analizar en background
+  analyzeForWatchlist(ticker);
+}
+
+async function analyzeForWatchlist(ticker) {
+  try {
+    const priceData = await fetchPrice(ticker).catch(() => null);
+    const price = priceData?.close || priceData?.previousClose || null;
+    const changeP = priceData?.change_p || null;
+
+    const [profData, incData, balData, ratData] = await Promise.all([
+      fmpProfile(ticker).catch(() => null),
+      saFetchData(ticker, '/financials/').catch(() => null),
+      saFetchData(ticker, '/financials/balance-sheet/').catch(() => null),
+      saFetchData(ticker, '/financials/ratios/').catch(() => null)
+    ]);
+
+    let profile = null, income = [], cashflow = [], balance = null, ratios = null;
+
+    if (profData?.symbol) {
+      const range = profData.range ? profData.range.split('-') : [];
+      profile = {
+        companyName: profData.companyName || ticker,
+        companyNameFull: profData.companyName || ticker,
+        symbol: ticker,
+        exchangeShortName: profData.exchange || '-',
+        sector: profData.sector || '-',
+        industry: profData.industry || '-',
+        mktCap: profData.marketCap || null,
+        beta: profData.beta || null,
+        description: profData.description || '',
+      };
+    }
+
+    if (incData?.revenue) {
+      const n = Math.min((incData.revenue.length || 1) - 1, 5);
+      for (let i = 1; i <= n; i++) {
+        income.push({
+          revenue: incData.revenue[i] || 0,
+          ebitda: incData.ebitda ? incData.ebitda[i] : 0,
+          eps: incData.epsDiluted ? incData.epsDiluted[i] : null,
+          weightedAverageShsOut: incData.sharesDiluted ? incData.sharesDiluted[i] : 0,
+          date: incData.fiscalYear ? incData.fiscalYear[i] : '',
+          freeCashFlow: incData.fcf ? incData.fcf[i] : 0,
+        });
+      }
+      if (incData.fcf) cashflow = income.map((_, i) => ({ freeCashFlow: incData.fcf[i+1] || 0 }));
+    }
+
+    if (balData) {
+      balance = {
+        cashAndShortTermInvestments: balData.totalcash ? (balData.totalcash[1] || 0) : 0,
+        totalDebt: balData.debt ? (balData.debt[1] || 0) : 0,
+        netCashDirect: balData.netCash ? balData.netCash[1] : null,
+      };
+    }
+    if (ratData?.roe) ratios = { returnOnEquityTTM: ratData.roe[1] || null };
+
+    const criteria = buildCriteria(ticker, price, profile, ratios, income, cashflow, balance, [], []);
+    const score = calcScore(criteria);
+    const [vLabel] = verdictLabel(score);
+
+    // Actualizar watchlist con datos reales
+    const wl = getWatchlist();
+    const item = wl.find(w => w.ticker === ticker);
+    if (item) {
+      item.name = profile?.companyName || ticker;
+      item.price = price;
+      item.change = changeP;
+      item.score = score;
+      item.verdict = vLabel;
+      item.ts = Date.now();
+      saveWatchlist(wl);
+      renderDashboard();
+    }
+  } catch(e) {
+    console.warn('WL analyze error:', ticker, e.message);
+  }
+}
+
+async function refreshWatchlist() {
+  const wl = getWatchlist();
+  if (!wl.length) return;
+  for (const item of wl) {
+    await analyzeForWatchlist(item.ticker);
+  }
+}
+
+function removeFromWatchlist(ticker) {
+  const wl = getWatchlist().filter(w => w.ticker !== ticker);
+  saveWatchlist(wl);
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const wl = getWatchlist();
+  const emptyEl = document.getElementById('wl-empty');
+  const tableEl = document.getElementById('wl-table');
+  const rowsEl  = document.getElementById('wl-rows');
+  const countEl = document.getElementById('wl-count');
+
+  if (!rowsEl) return;
+
+  countEl.textContent = wl.length + ' VALORES';
+
+  // KPIs
+  const scored = wl.filter(w => w.score !== null);
+  const avgScore = scored.length ? Math.round(scored.reduce((a,b) => a + b.score, 0) / scored.length) : null;
+  const passing  = scored.filter(w => w.score >= 70).length;
+  const warning  = scored.filter(w => w.score >= 50 && w.score < 70).length;
+
+  const kpiTotal = document.getElementById('kpi-total');
+  const kpiScore = document.getElementById('kpi-score');
+  const kpiScoreMeta = document.getElementById('kpi-score-meta');
+  const kpiPass  = document.getElementById('kpi-pass');
+  const kpiWarn  = document.getElementById('kpi-warn');
+
+  if (kpiTotal) kpiTotal.textContent = wl.length;
+  if (kpiScore) kpiScore.textContent = avgScore !== null ? avgScore + '%' : '—';
+  if (kpiScoreMeta) kpiScoreMeta.textContent = avgScore !== null ? (avgScore >= 70 ? 'Cartera fuerte' : avgScore >= 50 ? 'Cartera moderada' : 'Revisar cartera') : 'Sin datos aún';
+  if (kpiPass) kpiPass.textContent = passing;
+  if (kpiWarn) kpiWarn.textContent = warning;
+
+  if (!wl.length) {
+    emptyEl.style.display = 'block';
+    tableEl.style.display = 'none';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  tableEl.style.display = 'block';
+
+  rowsEl.innerHTML = wl.map(w => {
+    const scoreChipClass = w.score === null ? '' : w.score >= 70 ? 'h' : w.score >= 50 ? 'm' : 'l';
+    const scoreHtml = w.score !== null
+      ? `<span class="score-chip ${scoreChipClass}">${w.score}%</span>`
+      : `<span style="color:var(--text-3);font-size:11px">Analizando...</span>`;
+    const priceHtml = w.price
+      ? `<span style="font-family:var(--mono);font-size:13px">$${parseFloat(w.price).toFixed(2)}</span>`
+      : `<span style="color:var(--text-3);font-size:11px">—</span>`;
+    const changeHtml = w.change !== null
+      ? `<span class="pct-pill ${w.change >= 0 ? 'up' : 'down'}">${w.change >= 0 ? '+' : ''}${parseFloat(w.change).toFixed(2)}%</span>`
+      : '';
+    const verdictHtml = w.verdict
+      ? `<span style="font-size:11px;color:var(--text-2)">${w.verdict}</span>`
+      : '';
+
+    return `<div class="wl-row" style="cursor:pointer">
+      <span class="wl-ticker" onclick="analyze('${w.ticker}')">${w.ticker}</span>
+      <span class="wl-name" onclick="analyze('${w.ticker}')">${w.name}</span>
+      <span class="wl-price" style="text-align:right" onclick="analyze('${w.ticker}')">${priceHtml} ${changeHtml}</span>
+      <span style="text-align:center" onclick="analyze('${w.ticker}')">${scoreHtml}</span>
+      <span style="text-align:center" onclick="analyze('${w.ticker}')">${verdictHtml}</span>
+      <span style="text-align:center">
+        <button onclick="removeFromWatchlist('${w.ticker}')" 
+          style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;color:var(--text-3);cursor:pointer">
+          ✕
+        </button>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+// Inicializar dashboard al cargar
+document.addEventListener('DOMContentLoaded', () => {
+  renderDashboard();
+});
 
 // ─── SEARCH TRIGGER ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
