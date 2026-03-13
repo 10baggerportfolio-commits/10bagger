@@ -1574,19 +1574,37 @@ async function analyze(ticker) {
       : `${ticker} · Evaluando con Claude...`;
 
     document.getElementById('analyzer-content').innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:center;padding:80px;gap:14px;color:var(--text-3)">
-        <div class="spin"></div>
-        <div>
-          <div style="font-family:var(--mono);font-size:13px;margin-bottom:4px">Analizando ${ticker} con Claude IA...</div>
-          <div style="font-size:11px;color:var(--text-3)">Evaluando TAM, modelo de negocio y resiliencia. Puede tardar 10-15 segundos.</div>
+      <div style="max-width:520px;margin:60px auto;padding:0 20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+          <div class="spin"></div>
+          <div>
+            <div style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--text)">Analizando ${ticker}</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px">Análisis 10Bagger completo · 10-15 segundos</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${[
+            ['Twelve Data',     'Precio en tiempo real · variación diaria',          'var(--green)'],
+            ['FMP',             'Perfil empresa · sector · capitalización · CEO',     'var(--blue)'],
+            ['StockAnalysis',   'P&L · Balance · FCF · EBIT · Dilución · 5 años',    'var(--cyan)'],
+            ['StockAnalysis',   'CAGR ingresos 3a · CAGR FCF 3a · ROIC · Deuda',    'var(--cyan)'],
+            ['OpenInsider',     'Form 4 SEC · compras/ventas abiertas 12 meses',     'var(--amber)'],
+            ['Claude Sonnet',   'TAM vs MktCap · barreras reales · riesgo terminal', 'var(--purple)'],
+            ['Claude Sonnet',   'Tesis de inversión · catalizadores · riesgos',      'var(--purple)'],
+          ].map(([src, desc, color]) => `
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--s2);border:1px solid var(--border);border-radius:6px">
+              <div style="width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0"></div>
+              <div style="font-family:var(--mono);font-size:10px;color:${color};width:110px;flex-shrink:0">${src}</div>
+              <div style="font-size:11px;color:var(--text-3)">${desc}</div>
+            </div>`).join('')}
         </div>
       </div>`;
 
     // 5. Claude IA: criterios 04, 09 y editorial — esperar antes de render
     try {
       const netCashVal = balance?.netCashDirect ?? (balance ? balance.cashAndShortTermInvestments - balance.totalDebt : null);
-      const fcfCagrVal = income.length >= 5 && income[0]?.freeCashFlow && income[4]?.freeCashFlow
-        ? Math.pow(income[0].freeCashFlow / income[4].freeCashFlow, 1/4) - 1 : null;
+      const fcfCagrVal = cashflow?.length >= 4 && cashflow[0]?.freeCashFlow && cashflow[3]?.freeCashFlow && cashflow[3].freeCashFlow > 0
+        ? Math.pow(cashflow[0].freeCashFlow / cashflow[3].freeCashFlow, 1/3) - 1 : null;
 
       const claudeResult = await claudeAnalyze(ticker, profile, income, ratios, netCashVal, fcfCagrVal);
 
@@ -1708,8 +1726,13 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
   const safe = (v, fallback=null) => (v !== undefined && v !== null && !isNaN(v)) ? v : fallback;
 
   // Rev growth YoY (últimos 2 años de income)
+  // Revenue CAGR 3 años
   let revGrowth = null;
-  if (income?.length >= 2) {
+  if (income?.length >= 4) {
+    const r0 = income[0].revenue, r3 = income[3].revenue;
+    if (r3 > 0 && r0 > 0) revGrowth = Math.pow(r0 / r3, 1/3) - 1;
+  } else if (income?.length >= 2) {
+    // Fallback YoY si no hay 3 años
     const r0 = income[0].revenue, r1 = income[1].revenue;
     if (r1 > 0) revGrowth = (r0 - r1) / r1;
   }
@@ -1780,22 +1803,25 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
     else                  valVerdict = false;
   }
 
-  // FCF CAGR 5 years
+  // FCF CAGR 3 años
   let fcfCagr = null;
-  if (cashflow?.length >= 5) {
-    const fcf0 = cashflow[0].freeCashFlow, fcf4 = cashflow[4].freeCashFlow;
-    if (fcf4 > 0 && fcf0 > 0) fcfCagr = Math.pow(fcf0 / fcf4, 1/4) - 1;
+  if (cashflow?.length >= 4) {
+    const fcf0 = cashflow[0].freeCashFlow, fcf3 = cashflow[3].freeCashFlow;
+    if (fcf3 > 0 && fcf0 > 0) fcfCagr = Math.pow(fcf0 / fcf3, 1/3) - 1;
+  } else if (cashflow?.length >= 2) {
+    const fcf0 = cashflow[0].freeCashFlow, fcf1 = cashflow[1].freeCashFlow;
+    if (fcf1 > 0 && fcf0 > 0) fcfCagr = (fcf0 - fcf1) / fcf1;
   }
 
   return [
     { id:'01', name:'Crecimiento de Ingresos',    weight:1.0,
       value: revGrowth !== null ? fmtPct(revGrowth) : '—',
       raw: revGrowth,
-      pts: revGrowth === null ? 0 : revGrowth >= 0.20 ? 14 : revGrowth >= 0.15 ? 12 : revGrowth >= 0.10 ? 8 : revGrowth >= 0.05 ? 6 : revGrowth >= 0 ? 3 : 0,
+      pts: revGrowth === null ? 0 : revGrowth >= 0.20 ? 14 : revGrowth >= 0.15 ? 12 : revGrowth >= 0.10 ? 8 : revGrowth >= 0.05 ? 6 : revGrowth >= 0.03 ? 4 : revGrowth >= 0 ? 2 : 0,
       pass: revGrowth !== null && revGrowth >= 0.15,
       neutral: revGrowth !== null && revGrowth >= 0.05 && revGrowth < 0.15,
-      threshold:'≥15% PASA · ≥5% NEUTRAL',
-      note: revGrowth !== null ? (revGrowth >= 0.20 ? 'Crecimiento excepcional 10Bagger.' : revGrowth >= 0.15 ? 'Crecimiento 10Bagger.' : revGrowth >= 0.10 ? 'Crecimiento moderado.' : revGrowth >= 0.05 ? 'Crecimiento bajo, por encima de 5%.' : revGrowth >= 0 ? 'Crecimiento mínimo.' : 'Ingresos en caída.') : 'Necesita datos de ingresos.' },
+      threshold:'≥15% PASA · CAGR 3 años',
+      note: revGrowth !== null ? (revGrowth >= 0.20 ? 'Crecimiento excepcional 10Bagger.' : revGrowth >= 0.15 ? 'Crecimiento 10Bagger.' : revGrowth >= 0.10 ? 'Crecimiento moderado.' : revGrowth >= 0.05 ? 'Crecimiento sólido.' : revGrowth >= 0.03 ? 'Crecimiento lento pero positivo.' : revGrowth >= 0 ? 'Crecimiento mínimo.' : 'Ingresos en caída.') : 'Necesita datos de ingresos.' },
 
     { id:'02', name:'Conversión EBITDA→FCF',      weight:0.5,
       value: fcfConv !== null ? (fcfConv*100).toFixed(0)+'%' : '—',
