@@ -1560,17 +1560,22 @@ async function analyze(ticker) {
     const score    = calcScore(criteria);
     const [vLabel, vClass] = verdictLabel(score);
 
-    // 4. Render inicial (sin Claude todavía)
-    renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeColor,
-                   profile, ratios, income, cashflow, balance, estimates,
-                   criteria, score, vLabel, vClass);
-
-    titleEl.innerHTML = `Análisis completo · <span style="color:var(--blue)">${ticker}</span>`;
+    // 4. Mostrar loading mientras Claude analiza (no mostrar score parcial)
+    titleEl.innerHTML = `<span style="color:var(--blue)">${ticker}</span> · Analizando con IA...`;
     subEl.textContent = profile
-      ? `${profile.companyName} · ${profile.exchangeShortName} · ${profile.sector} · Cargando análisis IA...`
-      : `${ticker} · Cargando análisis IA...`;
+      ? `${profile.companyName} · Evaluando TAM, moat y resiliencia con Claude...`
+      : `${ticker} · Evaluando con Claude...`;
 
-    // 5. Claude IA: criterios 04, 09 y editorial (async, actualiza el DOM)
+    document.getElementById('analyzer-content').innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;padding:80px;gap:14px;color:var(--text-3)">
+        <div class="spin"></div>
+        <div>
+          <div style="font-family:var(--mono);font-size:13px;margin-bottom:4px">Analizando ${ticker} con Claude IA...</div>
+          <div style="font-size:11px;color:var(--text-3)">Evaluando TAM, modelo de negocio y resiliencia. Puede tardar 10-15 segundos.</div>
+        </div>
+      </div>`;
+
+    // 5. Claude IA: criterios 04, 09 y editorial — esperar antes de render
     try {
       const netCashVal = balance?.netCashDirect ?? (balance ? balance.cashAndShortTermInvestments - balance.totalDebt : null);
       const fcfCagrVal = income.length >= 5 && income[0]?.freeCashFlow && income[4]?.freeCashFlow
@@ -2139,21 +2144,23 @@ async function analyzeForWatchlist(ticker) {
 
     const criteria = buildCriteria(ticker, price, profile, ratios, income, cashflow, balance, [], []);
 
-    // Guardar score parcial (sin Claude) para mostrar algo rápido
-    let score = calcScore(criteria);
-    let [vLabel] = verdictLabel(score);
+    // Guardar precio y nombre ya (sin score — esperamos a Claude)
+    let score = null;
+    let vLabel = null;
     const wl1 = getWatchlist();
     const item1 = wl1.find(w => w.ticker === ticker);
     if (item1) {
       item1.name    = profile?.companyName || ticker;
       item1.price   = price;
       item1.change  = changeP;
-      item1.score   = score;
-      item1.verdict = vLabel;
+      item1.score   = null;
+      item1.verdict = 'Calculando...';
       item1.ts      = Date.now();
       saveWatchlist(wl1);
       renderDashboard();
     }
+    score = calcScore(criteria);
+    [vLabel] = verdictLabel(score);
 
     // Llamar a Claude para criterios 04 y 09
     try {
