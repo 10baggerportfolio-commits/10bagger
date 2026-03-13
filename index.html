@@ -1666,7 +1666,11 @@ async function fetchInsiderData(ticker) {
       // Columnas reales: 0=X, 1=Filing DateTime, 2=Trade Date, 3=Ticker, 4=Insider, 5=Title, 6=Trade Type, 7=Price, 8=Qty, 9=Owned, 10=ΔOwn%, 11=Value
       if (cols.length < 12) return null;
       const typeRaw = cols[6] || '';
-      const type = typeRaw.startsWith('P') ? 'P' : typeRaw.startsWith('S') ? 'S' : '';
+      // Solo contar compras abiertas (P) y ventas abiertas no planificadas (S)
+      // Ignorar: F (tax), M (options), A (awards), S-Auto (10b5-1 planned), J, G, X, etc.
+      let type = '';
+      if (typeRaw === 'P - Purchase' || typeRaw === 'P') type = 'P';
+      else if ((typeRaw === 'S - Sale' || typeRaw === 'S') && !typeRaw.includes('Auto') && !typeRaw.includes('10b5')) type = 'S';
       const value = parseFloat(cols[11]?.replace(/[$,+]/g, '')) || 0;
       return {
         date:  cols[2] || '',
