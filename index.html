@@ -1429,14 +1429,18 @@ async function saFetchData(ticker, path) {
 const MAX_SCORE = (6 * 14) + (4 * 7); // = 84+28 = 112 → normalizado a 100
 
 function calcScore(criteria) {
-  // criteria: array de {id, value, pass, neutral, weight}
-  // pass=1.0, neutral=0.5, fail=0.0
+  // Soporta pts directos (c.pts) o pass/neutral legacy
   let earned = 0, possible = 0;
   criteria.forEach(c => {
-    const pts = c.weight === 1.0 ? 14 : 7;
-    possible += pts;
-    if (c.pass === true)    earned += pts;
-    else if (c.neutral === true) earned += pts * 0.5;
+    const maxPts = c.weight === 1.0 ? 14 : 7;
+    possible += maxPts;
+    if (c.pts !== undefined) {
+      earned += c.pts;
+    } else if (c.pass === true) {
+      earned += maxPts;
+    } else if (c.neutral === true) {
+      earned += maxPts * 0.5;
+    }
   });
   return Math.round((earned / possible) * 100);
 }
@@ -1700,14 +1704,16 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
     { id:'01', name:'Crecimiento de Ingresos',    weight:1.0,
       value: revGrowth !== null ? fmtPct(revGrowth) : '—',
       raw: revGrowth,
+      pts: revGrowth === null ? 0 : revGrowth >= 0.20 ? 14 : revGrowth >= 0.15 ? 12 : revGrowth >= 0.10 ? 8 : revGrowth >= 0.05 ? 6 : revGrowth >= 0 ? 3 : 0,
       pass: revGrowth !== null && revGrowth >= 0.15,
       neutral: revGrowth !== null && revGrowth >= 0.05 && revGrowth < 0.15,
-      threshold:'≥15% PASA',
-      note: revGrowth !== null ? (revGrowth >= 0.15 ? 'Crecimiento 10Bagger.' : revGrowth >= 0.05 ? 'Crecimiento moderado, por debajo del umbral.' : 'Crecimiento bajo.') : 'Conecta FMP para dato real.' },
+      threshold:'≥15% PASA · ≥5% NEUTRAL',
+      note: revGrowth !== null ? (revGrowth >= 0.20 ? 'Crecimiento excepcional 10Bagger.' : revGrowth >= 0.15 ? 'Crecimiento 10Bagger.' : revGrowth >= 0.10 ? 'Crecimiento moderado.' : revGrowth >= 0.05 ? 'Crecimiento bajo, por encima de 5%.' : revGrowth >= 0 ? 'Crecimiento mínimo.' : 'Ingresos en caída.') : 'Necesita datos de ingresos.' },
 
     { id:'02', name:'Conversión EBITDA→FCF',      weight:0.5,
       value: fcfConv !== null ? (fcfConv*100).toFixed(0)+'%' : '—',
       raw: fcfConv,
+      pts: fcfConv === null ? 0 : fcfConv >= 0.80 ? 7 : fcfConv >= 0.60 ? 5 : fcfConv >= 0.40 ? 3 : 0,
       pass: fcfConv !== null && fcfConv >= 0.60,
       neutral: fcfConv !== null && fcfConv >= 0.40 && fcfConv < 0.60,
       threshold:'≥60% PASA',
@@ -1729,14 +1735,16 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
     { id:'05', name:'ROE',                         weight:1.0,
       value: roe !== null ? (roe*100).toFixed(1)+'%' : '—',
       raw: roe,
+      pts: roe === null ? 0 : roe >= 0.40 ? 14 : roe >= 0.25 ? 12 : roe >= 0.20 ? 10 : roe >= 0.12 ? 5 : roe >= 0.09 ? 3 : 0,
       pass: roe !== null && roe >= 0.20,
-      neutral: roe !== null && roe >= 0.10 && roe < 0.20,
-      threshold:'≥20% PASA',
-      note: roe !== null ? (roe >= 0.20 ? 'Ventaja competitiva demostrada.' : 'ROE por debajo del umbral.') : 'Conecta FMP para dato real.' },
+      neutral: roe !== null && roe >= 0.09 && roe < 0.20,
+      threshold:'≥20% PASA · ≥9% NEUTRAL',
+      note: roe !== null ? (roe >= 0.40 ? 'ROE excepcional. Moat muy fuerte.' : roe >= 0.25 ? 'ROE excelente.' : roe >= 0.20 ? 'Ventaja competitiva demostrada.' : roe >= 0.12 ? 'ROE moderado.' : roe >= 0.09 ? 'ROE bajo.' : 'ROE insuficiente.') : 'Conecta FMP para dato real.' },
 
     { id:'06', name:'Dilución Accionarial',        weight:0.5,
       value: dilution !== null ? fmtPct(dilution) : '—',
       raw: dilution,
+      pts: dilution === null ? 0 : dilution <= 0 ? 7 : dilution <= 0.005 ? 5 : dilution <= 0.02 ? 3 : 0,
       pass: dilution !== null && dilution <= 0.005,
       neutral: dilution !== null && dilution > 0.005 && dilution <= 0.02,
       threshold:'≤0.5% PASA (negativo = recompras)',
@@ -1745,6 +1753,7 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
     { id:'07', name:'Caja Neta / Balance',         weight:0.5,
       value: netCash !== null ? (netCash >= 0 ? '+' : '') + (netCash/1e9).toFixed(1)+'B' : '—',
       raw: netCash,
+      pts: netCash === null ? 0 : netCash >= 0 ? 7 : netCash > -5e9 ? 4 : 0,
       pass: netCash !== null && netCash >= 0,
       neutral: netCash !== null && netCash < 0 && netCash > -5e9,
       threshold:'Positivo PASA',
@@ -1766,6 +1775,7 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
     { id:'10', name:'FCF CAGR 5 años',             weight:1.0,
       value: fcfCagr !== null ? fmtPct(fcfCagr) : '—',
       raw: fcfCagr,
+      pts: fcfCagr === null ? 0 : fcfCagr >= 0.20 ? 14 : fcfCagr >= 0.15 ? 12 : fcfCagr >= 0.10 ? 9 : fcfCagr >= 0.05 ? 4 : 0,
       pass: fcfCagr !== null && fcfCagr >= 0.10,
       neutral: fcfCagr !== null && fcfCagr >= 0.05 && fcfCagr < 0.10,
       threshold:'≥10% PASA',
