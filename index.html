@@ -1588,6 +1588,7 @@ async function analyze(ticker) {
       const c04 = criteria.find(c => c.id === '04');
       if (c04 && claudeResult.tam) {
         c04.value   = claudeResult.tam.value;
+        c04.pts     = claudeResult.tam.pts !== undefined ? claudeResult.tam.pts : (claudeResult.tam.pass ? 14 : claudeResult.tam.neutral ? 7 : 0);
         c04.pass    = claudeResult.tam.pass;
         c04.neutral = claudeResult.tam.neutral;
         c04.note    = claudeResult.tam.note;
@@ -1597,6 +1598,7 @@ async function analyze(ticker) {
       const c09 = criteria.find(c => c.id === '09');
       if (c09 && claudeResult.moat) {
         c09.value   = claudeResult.moat.value;
+        c09.pts     = claudeResult.moat.pts !== undefined ? claudeResult.moat.pts : (claudeResult.moat.pass ? 14 : claudeResult.moat.neutral ? 7 : 0);
         c09.pass    = claudeResult.moat.pass;
         c09.neutral = claudeResult.moat.neutral;
         c09.note    = claudeResult.moat.note;
@@ -1796,19 +1798,39 @@ async function claudeAnalyze(ticker, profile, income, ratios, netCash, fcfCagr) 
   const fcag        = fcfCagr !== null ? (fcfCagr*100).toFixed(1) : '?';
   const caja        = netCash !== null ? (netCash/1e9).toFixed(1)+'B' : '?';
 
-  const prompt = 'Eres un analista de inversiones growth especializado en empresas 10-bagger. '
-    + 'Analiza ' + companyName + ' (' + ticker + ') del sector ' + sector + ' / ' + industry + '.\n\n'
-    + 'Datos financieros clave:\n'
-    + '- Ingresos FY mas reciente: $' + rev2024 + 'B\n'
+  const mktCapB = profile?.mktCap ? (profile.mktCap / 1e9).toFixed(1) : '?';
+
+  const prompt = 'Eres un analista de inversiones extremadamente exigente especializado en empresas 10-bagger. '
+    + 'Tu trabajo es evaluar si ' + companyName + ' (' + ticker + ') merece puntuacion alta en dos criterios criticos. '
+    + 'Sector: ' + sector + ' / ' + industry + '. Capitalizacion actual: $' + mktCapB + 'B.\n\n'
+    + 'Datos financieros:\n'
+    + '- Ingresos FY reciente: $' + rev2024 + 'B\n'
     + '- Crecimiento ingresos YoY: ' + revGrowth + '%\n'
     + '- ROE: ' + roe + '%\n'
     + '- FCF CAGR 5 anos: ' + fcag + '%\n'
     + '- Caja neta: $' + caja + '\n'
-    + '- Descripcion: ' + description.slice(0, 300) + '\n\n'
+    + '- Descripcion: ' + description.slice(0, 400) + '\n\n'
+    + 'CRITERIO 1 - TAM & MODELO DE NEGOCIO (max 14 puntos):\n'
+    + 'Evalua el TAM total addressable market en dolares y divídelo entre la capitalizacion actual ($' + mktCapB + 'B) para obtener el ratio TAM/MktCap. '
+    + 'Un ratio alto significa mucha pista de crecimiento. '
+    + 'Tambien evalua la calidad del modelo de negocio: recurrencia, pricing power, escalabilidad. '
+    + 'Puntuacion TAM: TAM/MktCap>10x=14pts, 5-10x=10pts, 2-5x=6pts, <2x=2pts. '
+    + 'Ajusta +/-2pts segun calidad del modelo. Maximo 14pts.\n\n'
+    + 'CRITERIO 2 - VALOR TERMINAL / RESILIENCIA IA (max 14 puntos):\n'
+    + 'Evalua las barreras de entrada ESPECIFICAS Y DEMOSTRABLES de esta empresa concreta (no genericas del sector): '
+    + 'switching costs reales, efectos de red medibles, ventajas regulatorias o de patentes, datos propietarios unicos, coste de reemplazo para el cliente. '
+    + 'NO penalices por ser SaaS, tech medica, marca u otro sector por si solo - evalua las barreras concretas de ESTA empresa. '
+    + 'Evalua tambien la amenaza tecnologica/IA ESPECIFICA para este modelo concreto (no generica). '
+    + 'Evalua dependencia de variables macro (consumo discrecional, tipos, regulacion). '
+    + 'Se muy exigente: 14pts solo si las barreras son demostradas, cuantificables y muy dificiles de replicar. '
+    + '10-13pts si hay barreras solidas pero con algun riesgo identificable. '
+    + '5-9pts si las barreras son moderadas o el riesgo tecnologico es real. '
+    + '0-4pts si el modelo es facilmente replicable o tiene riesgo terminal alto.\n\n'
     + 'Responde UNICAMENTE en este formato JSON exacto (sin markdown, sin texto extra):\n'
-    + '{"tam":{"verdict":"ALTO|MEDIO|BAJO","pass":true,"neutral":false,"value":"texto corto del TAM","note":"1-2 frases sobre el TAM y modelo de negocio"},'
-    + '"moat":{"verdict":"ALTO|MEDIO|BAJO","pass":true,"neutral":false,"value":"texto corto","note":"1-2 frases sobre resiliencia frente a IA y moat"},'
-    + '"editorial":{"title":"titulo de la tesis en 8-10 palabras","body":"3-4 frases de tesis de inversion. Por que puede ser un 10-bagger. Que riesgos tiene.","chips":["chip1","chip2","chip3"]}}';
+    + '{"tam":{"pts":NUMBER_0_14,"verdict":"ALTO|MEDIO-ALTO|MEDIO|BAJO","pass":BOOL,"neutral":BOOL,"value":"TAM estimado $XB · ratio X.Xx MktCap","note":"1-2 frases concretas sobre TAM y modelo"},'
+    + '"moat":{"pts":NUMBER_0_14,"verdict":"ALTO|MEDIO|BAJO","pass":BOOL,"neutral":BOOL,"value":"descripcion corta del moat","note":"1-2 frases sobre barreras concretas y riesgos especificos"},'
+    + '"editorial":{"title":"titulo tesis inversion 8-10 palabras","body":"3-4 frases. Por que puede ser 10-bagger. Riesgos concretos.","chips":["chip1","chip2","chip3"]}}'
+    + '\nReglas: pass=true si pts>=10, neutral=true si pts>=6 y pts<10, pass=false y neutral=false si pts<6.';
 
 
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
