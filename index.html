@@ -1493,11 +1493,12 @@ async function analyze(ticker) {
     let cashflow = [], balance = null, insider = [], estimates = [];
 
     try {
-      const [profData, incData, balData, ratData] = await Promise.all([
+      const [profData, incData, balData, ratData, insiderData] = await Promise.all([
         fmpProfile(ticker),
         saFetchData(ticker, '/financials/'),
         saFetchData(ticker, '/financials/balance-sheet/'),
-        saFetchData(ticker, '/financials/ratios/')
+        saFetchData(ticker, '/financials/ratios/'),
+        fetchInsiderData(ticker).catch(() => null)
       ]);
 
       if (profData && profData.symbol) {
@@ -1549,6 +1550,9 @@ async function analyze(ticker) {
 
       if (ratData) {
         if (ratData.roe) ratios = { returnOnEquityTTM: ratData.roe[1] || null };
+
+      // Insider data de OpenInsider
+      if (insiderData) insider = insiderData;
       }
 
     } catch(e) {
@@ -1642,6 +1646,49 @@ async function analyze(ticker) {
 }
 
 // ─── BUILD CRITERIA ──────────────────────────────────────────
+async function fetchInsiderData(ticker) {
+  // OpenInsider CSV: compras y ventas del último año
+  const url = `http://openinsider.com/screener?s=${ticker}&t=365&typ=&cnt=20&action=getdata&format=csv`;
+  const proxied = PROXY + encodeURIComponent(url);
+  try {
+    const res = await fetch(proxied);
+    const text = await res.text();
+    const lines = text.trim().split('\n').filter(l => l.trim());
+    if (lines.length < 2) return { buys: 0, sells: 0, netValue: 0, transactions: [] };
+
+    // Parsear CSV — columnas: Filing Date, Trade Date, Ticker, Company, Insider, Title, Trade Type, Price, Qty, Owned, ΔOwn, Value
+    const rows = lines.slice(1).map(line => {
+      const cols = line.split(',').map(c => c.replace(/"/g, '').trim());
+      return {
+        date:  cols[1] || '',
+        type:  cols[6] || '',  // P = Purchase, S = Sale
+        price: parseFloat(cols[7]) || 0,
+        qty:   parseInt(cols[8]?.replace(/[^0-9-]/g,'')) || 0,
+        value: parseFloat(cols[11]?.replace(/[$,]/g,'')) || 0,
+        title: cols[5] || '',
+        name:  cols[4] || '',
+      };
+    });
+
+    const buys  = rows.filter(r => r.type === 'P');
+    const sells = rows.filter(r => r.type === 'S');
+    const buyVal  = buys.reduce((s, r) => s + Math.abs(r.value), 0);
+    const sellVal = sells.reduce((s, r) => s + Math.abs(r.value), 0);
+
+    return {
+      buys: buys.length,
+      sells: sells.length,
+      buyValue: buyVal,
+      sellValue: sellVal,
+      netValue: buyVal - sellVal,
+      transactions: rows.slice(0, 5),
+    };
+  } catch(e) {
+    console.warn('OpenInsider error:', e.message);
+    return { buys: 0, sells: 0, buyValue: 0, sellValue: 0, netValue: 0, transactions: [] };
+  }
+}
+
 function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance, insider, estimates) {
   // Helpers
   const safe = (v, fallback=null) => (v !== undefined && v !== null && !isNaN(v)) ? v : fallback;
@@ -1663,6 +1710,14 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
 
   // Insider % of shares outstanding
   let insiderPct = safe(profile?.insidersOwnershipPercentage);
+
+  // Datos de OpenInsider: compras vs ventas último año
+  const insiderBuys     = insider?.buys     || 0;
+  const insiderSells    = insider?.sells    || 0;
+  const insiderBuyVal   = insider?.buyValue || 0;
+  const insiderSellVal  = insider?.sellValue|| 0;
+  const insiderNetVal   = insider?.netValue || 0;
+  const hasInsiderData  = insiderBuys > 0 || insiderSells > 0;
 
   // ROE TTM
   let roe = safe(ratios?.returnOnEquityTTM);
@@ -1725,12 +1780,25 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
       note: fcfConv !== null ? (fcfConv >= 0.60 ? 'Excelente generación de caja.' : 'Conversión mejorable.') : 'Conecta FMP para dato real.' },
 
     { id:'03', name:'Alineación Directiva',        weight:0.5,
-      value: insiderPct !== null ? (insiderPct*100).toFixed(1)+'%' : '—',
-      raw: insiderPct,
-      pass: insiderPct !== null && insiderPct >= 0.05,
-      neutral: insiderPct !== null && insiderPct >= 0.02 && insiderPct < 0.05,
-      threshold:'≥5% PASA',
-      note: insiderPct !== null ? (insiderPct >= 0.05 ? 'Directivos con piel en el juego.' : 'Baja tenencia directiva.') : 'Conecta FMP para dato real.' },
+      value: hasInsiderData
+        ? (insiderBuys > 0 ? `${insiderBuys} compras · $${(insiderBuyVal/1e6).toFixed(1)}M` : `${insiderSells} ventas`)
+        : '—',
+      raw: hasInsiderData ? insiderNetVal : null,
+      pts: !hasInsiderData ? 0
+        : insiderNetVal > 1e6 && insiderBuys > insiderSells ? 7
+        : insiderNetVal > 0 ? 5
+        : insiderBuys > 0 && insiderSells > 0 ? 3
+        : insiderSells > 0 && insiderBuys === 0 ? 1
+        : 0,
+      pass: hasInsiderData && insiderNetVal > 1e6 && insiderBuys > insiderSells,
+      neutral: hasInsiderData && insiderNetVal >= 0 && !(insiderNetVal > 1e6 && insiderBuys > insiderSells),
+      threshold:'Compras netas >$1M PASA',
+      note: !hasInsiderData ? 'Sin transacciones insider en el último año.'
+        : insiderNetVal > 1e6 && insiderBuys > insiderSells
+          ? `Señal positiva: ${insiderBuys} compras ($${(insiderBuyVal/1e6).toFixed(1)}M) vs ${insiderSells} ventas ($${(insiderSellVal/1e6).toFixed(1)}M) últimos 12m.`
+          : insiderBuys > 0
+            ? `Actividad mixta: ${insiderBuys} compras ($${(insiderBuyVal/1e6).toFixed(1)}M) y ${insiderSells} ventas ($${(insiderSellVal/1e6).toFixed(1)}M).`
+            : `Presión vendedora: ${insiderSells} ventas ($${(insiderSellVal/1e6).toFixed(1)}M) sin compras registradas.` },
 
     { id:'04', name:'TAM & Modelo de Negocio',     weight:1.0,
       value:'—', raw:null, pass:null, neutral:false,
