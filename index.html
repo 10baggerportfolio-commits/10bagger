@@ -1527,6 +1527,8 @@ async function analyze(ticker) {
           income.push({
             revenue: incData.revenue[i] || 0,
             ebitda:  incData.ebitda ? incData.ebitda[i] : 0,
+            ebit:    incData.ebit   ? incData.ebit[i]   : 0,
+            taxRate: incData.effectiveTaxRate ? incData.effectiveTaxRate[i] : 0.21,
             eps:     incData.epsDiluted ? incData.epsDiluted[i] : null,
             weightedAverageShsOut: incData.sharesDiluted ? incData.sharesDiluted[i] : 0,
             date:    incData.fiscalYear ? incData.fiscalYear[i] : '',
@@ -1545,6 +1547,7 @@ async function analyze(ticker) {
           cashAndShortTermInvestments: balData.totalcash ? (balData.totalcash[1] || 0) : 0,
           totalDebt: balData.debt ? (balData.debt[1] || 0) : 0,
           netCashDirect: balData.netCash ? balData.netCash[1] : null,
+          shareholdersEquity: balData.equity ? (balData.equity[1] || null) : null,
         };
       }
 
@@ -1733,6 +1736,19 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
   // ROE TTM
   let roe = safe(ratios?.returnOnEquityTTM);
 
+  // Calcular ROIC: EBIT*(1-tax) / (Deuda + max(Equity,0))
+  let roic = null;
+  if (income.length >= 1 && income[0].ebit) {
+    const ebit    = income[0].ebit;
+    const taxRate = Math.abs(income[0].taxRate || 0.21);
+    const nopat   = ebit * (1 - Math.min(taxRate, 0.5));
+    const debt    = balance?.totalDebt || 0;
+    const equity  = balance?.shareholdersEquity || 0;
+    const investedCapital = debt + Math.max(equity, 0);
+    if (investedCapital > 0) roic = nopat / investedCapital;
+    else if (debt > 0) roic = nopat / debt; // equity negativo: usar solo deuda
+  }
+
   // Dilution: shares change (negative = buyback = good)
   let dilution = null;
   if (income?.length >= 2) {
@@ -1823,14 +1839,14 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
       threshold:'Cualitativo · Claude IA',
       note:'Requiere análisis Claude para evaluación.' },
 
-    { id:'05', name:'ROE',                         weight:1.0,
-      value: roe !== null ? (roe*100).toFixed(1)+'%' : '—',
-      raw: roe,
-      pts: roe === null ? 0 : roe >= 0.40 ? 14 : roe >= 0.25 ? 12 : roe >= 0.20 ? 10 : roe >= 0.12 ? 5 : roe >= 0.09 ? 3 : 0,
-      pass: roe !== null && roe >= 0.20,
-      neutral: roe !== null && roe >= 0.09 && roe < 0.20,
-      threshold:'≥20% PASA · ≥9% NEUTRAL',
-      note: roe !== null ? (roe >= 0.40 ? 'ROE excepcional. Moat muy fuerte.' : roe >= 0.25 ? 'ROE excelente.' : roe >= 0.20 ? 'Ventaja competitiva demostrada.' : roe >= 0.12 ? 'ROE moderado.' : roe >= 0.09 ? 'ROE bajo.' : 'ROE insuficiente.') : 'Conecta FMP para dato real.' },
+    { id:'05', name:'ROIC',                        weight:1.0,
+      value: roic !== null ? (roic*100).toFixed(1)+'%' : '—',
+      raw: roic,
+      pts: roic === null ? 0 : roic >= 0.30 ? 14 : roic >= 0.20 ? 12 : roic >= 0.15 ? 10 : roic >= 0.10 ? 5 : roic >= 0.07 ? 3 : 0,
+      pass: roic !== null && roic >= 0.15,
+      neutral: roic !== null && roic >= 0.07 && roic < 0.15,
+      threshold:'≥15% PASA · ≥7% NEUTRAL',
+      note: roic !== null ? (roic >= 0.30 ? 'ROIC excepcional. Moat muy fuerte.' : roic >= 0.20 ? 'ROIC excelente. Ventaja competitiva clara.' : roic >= 0.15 ? 'ROIC sólido. Genera valor por encima del coste de capital.' : roic >= 0.10 ? 'ROIC moderado.' : roic >= 0.07 ? 'ROIC bajo, cerca del coste de capital.' : 'ROIC insuficiente. Destruye valor.') : 'Sin datos suficientes para calcular ROIC.' },
 
     { id:'06', name:'Dilución Accionarial',        weight:0.5,
       value: dilution !== null ? fmtPct(dilution) : '—',
