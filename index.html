@@ -1323,8 +1323,18 @@ body {
 
 <script>
 // ─── API KEYS ────────────────────────────────────────────────
+function getAnthropicKey() {
+  let k = localStorage.getItem('anthropic_key') || '';
+  if (!k) {
+    k = prompt('Introduce tu Anthropic API Key para activar análisis IA (se guarda solo en tu navegador):') || '';
+    if (k) localStorage.setItem('anthropic_key', k);
+  }
+  return k;
+}
+
 const TD_KEY  = '6fb71d7bb63848138494fa3676004754'; // Twelve Data (precio)
 const FMP_KEY = 'UfMwGk9iqXJuR8y6DYPgHX8nk2UUfAct'; // FMP (profile)
+const ANTHROPIC_KEY = (typeof getAnthropicKey === 'function') ? getAnthropicKey() : '';
 const PROXY   = 'https://10bagger-proxy.10baggerportfolio.workers.dev/?url=';
 
 // ─── EODHD ticker map (europeas necesitan sufijo) ─────────────
@@ -1547,20 +1557,68 @@ async function analyze(ticker) {
       console.warn('Fundamentals error:', e.message);
     }
 
-    // 3. Calcular criterios con datos reales (o simulados si no hay FMP)
+    // 3. Calcular criterios con datos reales
     const criteria = buildCriteria(ticker, price, profile, ratios, income, cashflow, balance, insider, estimates);
     const score    = calcScore(criteria);
     const [vLabel, vClass] = verdictLabel(score);
 
-    // 4. Render
+    // 4. Render inicial (sin Claude todavía)
     renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeColor,
                    profile, ratios, income, cashflow, balance, estimates,
                    criteria, score, vLabel, vClass);
 
     titleEl.innerHTML = `Análisis completo · <span style="color:var(--blue)">${ticker}</span>`;
     subEl.textContent = profile
-      ? `${profile.companyName} · ${profile.exchangeShortName} · ${profile.sector} · FMP + EODHD + Claude`
-      : `${ticker} · EODHD precio real · Conecta FMP para fundamentales`;
+      ? `${profile.companyName} · ${profile.exchangeShortName} · ${profile.sector} · Cargando análisis IA...`
+      : `${ticker} · Cargando análisis IA...`;
+
+    // 5. Claude IA: criterios 04, 09 y editorial (async, actualiza el DOM)
+    try {
+      const netCashVal = balance?.netCashDirect ?? (balance ? balance.cashAndShortTermInvestments - balance.totalDebt : null);
+      const fcfCagrVal = income.length >= 5 && income[0]?.freeCashFlow && income[4]?.freeCashFlow
+        ? Math.pow(income[0].freeCashFlow / income[4].freeCashFlow, 1/4) - 1 : null;
+
+      const claudeResult = await claudeAnalyze(ticker, profile, income, ratios, netCashVal, fcfCagrVal);
+
+      // Actualizar criterio 04
+      const c04 = criteria.find(c => c.id === '04');
+      if (c04 && claudeResult.tam) {
+        c04.value   = claudeResult.tam.value;
+        c04.pass    = claudeResult.tam.pass;
+        c04.neutral = claudeResult.tam.neutral;
+        c04.note    = claudeResult.tam.note;
+      }
+
+      // Actualizar criterio 09
+      const c09 = criteria.find(c => c.id === '09');
+      if (c09 && claudeResult.moat) {
+        c09.value   = claudeResult.moat.value;
+        c09.pass    = claudeResult.moat.pass;
+        c09.neutral = claudeResult.moat.neutral;
+        c09.note    = claudeResult.moat.note;
+      }
+
+      // Recalcular score con Claude
+      const newScore = calcScore(criteria);
+      const [newVLabel, newVClass] = verdictLabel(newScore);
+
+      // Re-render completo con datos Claude
+      renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeColor,
+                     profile, ratios, income, cashflow, balance, estimates,
+                     criteria, newScore, newVLabel, newVClass, claudeResult.editorial);
+
+      titleEl.innerHTML = `Análisis completo · <span style="color:var(--blue)">${ticker}</span>`;
+      subEl.textContent = profile
+        ? `${profile.companyName} · ${profile.exchangeShortName} · ${profile.sector} · FMP + StockAnalysis + Claude`
+        : `${ticker} · StockAnalysis + Claude IA`;
+
+    } catch(claudeErr) {
+      console.warn('Claude error:', claudeErr.message);
+      titleEl.innerHTML = `Análisis completo · <span style="color:var(--blue)">${ticker}</span>`;
+      subEl.textContent = profile
+        ? `${profile.companyName} · ${profile.exchangeShortName} · ${profile.sector}`
+        : ticker;
+    }
 
   } catch(err) {
     console.error('Analyze error:', err);
@@ -1715,6 +1773,55 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
   ];
 }
 
+// ─── CLAUDE AI ANALYSIS (criterios 04 y 09 + editorial) ────────
+async function claudeAnalyze(ticker, profile, income, ratios, netCash, fcfCagr) {
+  const companyName = profile?.companyName || ticker;
+  const sector      = profile?.sector || 'desconocido';
+  const industry    = profile?.industry || 'desconocido';
+  const description = profile?.description || '';
+  const rev2024     = income[0]?.revenue ? (income[0].revenue/1e9).toFixed(1) : '?';
+  const revGrowth   = income.length >= 2 && income[0].revenue && income[1].revenue
+    ? (((income[0].revenue / income[1].revenue) - 1) * 100).toFixed(1) : '?';
+  const roe         = ratios?.returnOnEquityTTM ? (ratios.returnOnEquityTTM*100).toFixed(1) : '?';
+  const fcag        = fcfCagr !== null ? (fcfCagr*100).toFixed(1) : '?';
+  const caja        = netCash !== null ? (netCash/1e9).toFixed(1)+'B' : '?';
+
+  const prompt = 'Eres un analista de inversiones growth especializado en empresas 10-bagger. '
+    + 'Analiza ' + companyName + ' (' + ticker + ') del sector ' + sector + ' / ' + industry + '.\n\n'
+    + 'Datos financieros clave:\n'
+    + '- Ingresos FY mas reciente: $' + rev2024 + 'B\n'
+    + '- Crecimiento ingresos YoY: ' + revGrowth + '%\n'
+    + '- ROE: ' + roe + '%\n'
+    + '- FCF CAGR 5 anos: ' + fcag + '%\n'
+    + '- Caja neta: $' + caja + '\n'
+    + '- Descripcion: ' + description.slice(0, 300) + '\n\n'
+    + 'Responde UNICAMENTE en este formato JSON exacto (sin markdown, sin texto extra):\n'
+    + '{"tam":{"verdict":"ALTO|MEDIO|BAJO","pass":true,"neutral":false,"value":"texto corto del TAM","note":"1-2 frases sobre el TAM y modelo de negocio"},'
+    + '"moat":{"verdict":"ALTO|MEDIO|BAJO","pass":true,"neutral":false,"value":"texto corto","note":"1-2 frases sobre resiliencia frente a IA y moat"},'
+    + '"editorial":{"title":"titulo de la tesis en 8-10 palabras","body":"3-4 frases de tesis de inversion. Por que puede ser un 10-bagger. Que riesgos tiene.","chips":["chip1","chip2","chip3"]}}';
+
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!resp.ok) throw new Error('Claude API error: ' + resp.status);
+  const data = await resp.json();
+  const text = data.content[0].text.trim();
+  return JSON.parse(text);
+}
+
 // ─── SHOW LOADING STATE ──────────────────────────────────────
 function showAnalyzerLoading(ticker) {
   const loading = `
@@ -1728,7 +1835,7 @@ function showAnalyzerLoading(ticker) {
 // ─── RENDER FULL ANALYZER PAGE ───────────────────────────────
 function renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeColor,
                         profile, ratios, income, cashflow, balance, estimates,
-                        criteria, score, vLabel, vClass) {
+                        criteria, score, vLabel, vClass, editorial) {
   const name = profile?.companyNameFull || profile?.companyName || ticker;
   const exch = profile?.exchangeShortName || '—';
   const sect = profile?.sector || '—';
@@ -1888,13 +1995,21 @@ function renderAnalyzer(ticker, price, priceStr, changePct, changeArrow, changeC
     <div class="sec-div"><span class="sec-div-title">Estimaciones financieras</span><div class="sec-div-line"></div><span class="sec-div-meta">FMP + CONSENSO WALL ST.</span></div>
     <div class="est-grid" style="margin-bottom:24px">${estRows}</div>
 
-    <div class="analysis-block" style="border-left-color:var(--text-3)">
-      <div class="ab-tag">ANÁLISIS EDITORIAL · CLAUDE SONNET · PENDIENTE</div>
-      <div class="ab-title" style="color:var(--text-2)">Conecta Claude API para análisis editorial completo</div>
+    ${editorial ? `
+    <div class="analysis-block" style="border-left-color:var(--blue)">
+      <div class="ab-tag">ANÁLISIS EDITORIAL · CLAUDE SONNET · IA</div>
+      <div class="ab-title">${editorial.title}</div>
       <div class="ab-body">
-        <p>El análisis editorial, la evaluación de TAM, Valor Terminal / Resiliencia IA y la tesis de inversión se generan con Claude Sonnet. Añade tu Anthropic API key para activar esta funcionalidad.</p>
+        <p>${editorial.body}</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          ${(editorial.chips||[]).map(chip => `<span class="f-chip">${chip}</span>`).join('')}
+        </div>
       </div>
-    </div>`;
+    </div>` : `
+    <div class="analysis-block" style="border-left-color:var(--text-3)">
+      <div class="ab-tag">ANÁLISIS EDITORIAL · CLAUDE SONNET · CARGANDO...</div>
+      <div class="ab-title" style="color:var(--text-2)">Generando tesis de inversión con IA...</div>
+    </div>`}`;
 }
 
 // ─── SEARCH TRIGGER ──────────────────────────────────────────
