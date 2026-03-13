@@ -2138,22 +2138,60 @@ async function analyzeForWatchlist(ticker) {
     if (ratData?.roe) ratios = { returnOnEquityTTM: ratData.roe[1] || null };
 
     const criteria = buildCriteria(ticker, price, profile, ratios, income, cashflow, balance, [], []);
-    const score = calcScore(criteria);
-    const [vLabel] = verdictLabel(score);
 
-    // Actualizar watchlist con datos reales
-    const wl = getWatchlist();
-    const item = wl.find(w => w.ticker === ticker);
-    if (item) {
-      item.name = profile?.companyName || ticker;
-      item.price = price;
-      item.change = changeP;
-      item.score = score;
-      item.verdict = vLabel;
-      item.ts = Date.now();
-      saveWatchlist(wl);
+    // Guardar score parcial (sin Claude) para mostrar algo rápido
+    let score = calcScore(criteria);
+    let [vLabel] = verdictLabel(score);
+    const wl1 = getWatchlist();
+    const item1 = wl1.find(w => w.ticker === ticker);
+    if (item1) {
+      item1.name    = profile?.companyName || ticker;
+      item1.price   = price;
+      item1.change  = changeP;
+      item1.score   = score;
+      item1.verdict = vLabel;
+      item1.ts      = Date.now();
+      saveWatchlist(wl1);
       renderDashboard();
     }
+
+    // Llamar a Claude para criterios 04 y 09
+    try {
+      const netCashVal = balance?.netCashDirect ?? (balance ? balance.cashAndShortTermInvestments - balance.totalDebt : null);
+      const fcfCagrVal = income.length >= 5 && income[0]?.freeCashFlow && income[4]?.freeCashFlow
+        ? Math.pow(income[0].freeCashFlow / income[4].freeCashFlow, 1/4) - 1 : null;
+
+      const claudeResult = await claudeAnalyze(ticker, profile, income, ratios, netCashVal, fcfCagrVal);
+
+      const c04 = criteria.find(c => c.id === '04');
+      if (c04 && claudeResult.tam) {
+        c04.pts     = claudeResult.tam.pts !== undefined ? claudeResult.tam.pts : (claudeResult.tam.pass ? 14 : claudeResult.tam.neutral ? 7 : 0);
+        c04.pass    = claudeResult.tam.pass;
+        c04.neutral = claudeResult.tam.neutral;
+      }
+      const c09 = criteria.find(c => c.id === '09');
+      if (c09 && claudeResult.moat) {
+        c09.pts     = claudeResult.moat.pts !== undefined ? claudeResult.moat.pts : (claudeResult.moat.pass ? 14 : claudeResult.moat.neutral ? 7 : 0);
+        c09.pass    = claudeResult.moat.pass;
+        c09.neutral = claudeResult.moat.neutral;
+      }
+
+      score = calcScore(criteria);
+      [vLabel] = verdictLabel(score);
+    } catch(claudeErr) {
+      console.warn('WL Claude error:', ticker, claudeErr.message);
+    }
+
+    // Guardar score final (con Claude)
+    const wl2 = getWatchlist();
+    const item2 = wl2.find(w => w.ticker === ticker);
+    if (item2) {
+      item2.score   = score;
+      item2.verdict = vLabel;
+      saveWatchlist(wl2);
+      renderDashboard();
+    }
+
   } catch(e) {
     console.warn('WL analyze error:', ticker, e.message);
   }
