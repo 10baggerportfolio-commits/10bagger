@@ -1647,41 +1647,48 @@ async function analyze(ticker) {
 
 // ─── BUILD CRITERIA ──────────────────────────────────────────
 async function fetchInsiderData(ticker) {
-  // OpenInsider CSV: compras y ventas del último año
-  const url = `http://openinsider.com/screener?s=${ticker}&t=365&typ=&cnt=20&action=getdata&format=csv`;
+  // OpenInsider HTML scraping — parsear tabla insiderTable
+  const url = `http://openinsider.com/screener?s=${ticker}&t=365&cnt=40&action=getdata`;
   const proxied = PROXY + encodeURIComponent(url);
   try {
     const res = await fetch(proxied);
-    const text = await res.text();
-    const lines = text.trim().split('\n').filter(l => l.trim());
-    if (lines.length < 2) return { buys: 0, sells: 0, netValue: 0, transactions: [] };
+    const html = await res.text();
 
-    // Parsear CSV — columnas: Filing Date, Trade Date, Ticker, Company, Insider, Title, Trade Type, Price, Qty, Owned, ΔOwn, Value
-    const rows = lines.slice(1).map(line => {
-      const cols = line.split(',').map(c => c.replace(/"/g, '').trim());
+    // Parsear HTML con DOMParser
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const table = doc.querySelector('table.tinytable, table#insiderTable, .tinytable');
+    if (!table) return { buys: 0, sells: 0, buyValue: 0, sellValue: 0, netValue: 0, transactions: [] };
+
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    const parsed = rows.map(row => {
+      const cols = Array.from(row.querySelectorAll('td')).map(td => td.textContent.trim());
+      // Columnas reales: 0=X, 1=Filing DateTime, 2=Trade Date, 3=Ticker, 4=Insider, 5=Title, 6=Trade Type, 7=Price, 8=Qty, 9=Owned, 10=ΔOwn%, 11=Value
+      if (cols.length < 12) return null;
+      const typeRaw = cols[6] || '';
+      const type = typeRaw.startsWith('P') ? 'P' : typeRaw.startsWith('S') ? 'S' : '';
+      const value = parseFloat(cols[11]?.replace(/[$,+]/g, '')) || 0;
       return {
-        date:  cols[1] || '',
-        type:  cols[6] || '',  // P = Purchase, S = Sale
-        price: parseFloat(cols[7]) || 0,
-        qty:   parseInt(cols[8]?.replace(/[^0-9-]/g,'')) || 0,
-        value: parseFloat(cols[11]?.replace(/[$,]/g,'')) || 0,
+        date:  cols[2] || '',
+        type:  type,
+        value: Math.abs(value),
         title: cols[5] || '',
         name:  cols[4] || '',
       };
-    });
+    }).filter(r => r && (r.type === 'P' || r.type === 'S'));
 
-    const buys  = rows.filter(r => r.type === 'P');
-    const sells = rows.filter(r => r.type === 'S');
-    const buyVal  = buys.reduce((s, r) => s + Math.abs(r.value), 0);
-    const sellVal = sells.reduce((s, r) => s + Math.abs(r.value), 0);
+    const buys    = parsed.filter(r => r.type === 'P');
+    const sells   = parsed.filter(r => r.type === 'S');
+    const buyVal  = buys.reduce((s, r)  => s + r.value, 0);
+    const sellVal = sells.reduce((s, r) => s + r.value, 0);
 
     return {
-      buys: buys.length,
-      sells: sells.length,
-      buyValue: buyVal,
+      buys:      buys.length,
+      sells:     sells.length,
+      buyValue:  buyVal,
       sellValue: sellVal,
-      netValue: buyVal - sellVal,
-      transactions: rows.slice(0, 5),
+      netValue:  buyVal - sellVal,
+      transactions: parsed.slice(0, 5),
     };
   } catch(e) {
     console.warn('OpenInsider error:', e.message);
@@ -1784,21 +1791,28 @@ function buildCriteria(ticker, price, profile, ratios, income, cashflow, balance
         ? (insiderBuys > 0 ? `${insiderBuys} compras · $${(insiderBuyVal/1e6).toFixed(1)}M` : `${insiderSells} ventas`)
         : '—',
       raw: hasInsiderData ? insiderNetVal : null,
-      pts: !hasInsiderData ? 0
-        : insiderNetVal > 1e6 && insiderBuys > insiderSells ? 7
-        : insiderNetVal > 0 ? 5
-        : insiderBuys > 0 && insiderSells > 0 ? 3
-        : insiderSells > 0 && insiderBuys === 0 ? 1
-        : 0,
-      pass: hasInsiderData && insiderNetVal > 1e6 && insiderBuys > insiderSells,
-      neutral: hasInsiderData && insiderNetVal >= 0 && !(insiderNetVal > 1e6 && insiderBuys > insiderSells),
-      threshold:'Compras netas >$1M PASA',
-      note: !hasInsiderData ? 'Sin transacciones insider en el último año.'
-        : insiderNetVal > 1e6 && insiderBuys > insiderSells
-          ? `Señal positiva: ${insiderBuys} compras ($${(insiderBuyVal/1e6).toFixed(1)}M) vs ${insiderSells} ventas ($${(insiderSellVal/1e6).toFixed(1)}M) últimos 12m.`
-          : insiderBuys > 0
-            ? `Actividad mixta: ${insiderBuys} compras ($${(insiderBuyVal/1e6).toFixed(1)}M) y ${insiderSells} ventas ($${(insiderSellVal/1e6).toFixed(1)}M).`
-            : `Presión vendedora: ${insiderSells} ventas ($${(insiderSellVal/1e6).toFixed(1)}M) sin compras registradas.` },
+      pts: (() => {
+        if (!hasInsiderData) return !insiderBuys && insiderSells > 0 ? -2 : 2;
+        const mktCap = profile?.mktCap || 0;
+        const threshold = mktCap > 0 ? mktCap * 0.0001 : 1e6;
+        if (insiderBuys > insiderSells && insiderNetVal >= threshold) return 7;
+        if (insiderNetVal > 0) return 5;
+        if (insiderBuys > 0 && insiderSells > 0) return 3;
+        if (!insiderBuys && insiderSells === 0) return 2;
+        return -2; // solo ventas
+      })(),
+      pass: hasInsiderData && insiderBuys > insiderSells && insiderNetVal >= (profile?.mktCap || 0) * 0.0001,
+      neutral: hasInsiderData && insiderNetVal > 0 && !(insiderBuys > insiderSells && insiderNetVal >= (profile?.mktCap || 0) * 0.0001),
+      threshold:'Compras netas >0.01% MktCap PASA',
+      note: !hasInsiderData
+        ? (insiderSells > 0 ? `Señal negativa: solo ventas ($${(insiderSellVal/1e6).toFixed(1)}M) sin compras en 12m.` : 'Sin transacciones insider en el último año.')
+        : insiderBuys > insiderSells && insiderNetVal >= (profile?.mktCap || 0) * 0.0001
+          ? `Señal fuerte: ${insiderBuys} compras ($${(insiderBuyVal/1e6).toFixed(1)}M) vs ${insiderSells} ventas ($${(insiderSellVal/1e6).toFixed(1)}M) últimos 12m.`
+          : insiderNetVal > 0
+            ? `Compras netas positivas pero por debajo del umbral significativo.`
+            : insiderBuys > 0
+              ? `Actividad mixta: ${insiderBuys} compras ($${(insiderBuyVal/1e6).toFixed(1)}M) y ${insiderSells} ventas ($${(insiderSellVal/1e6).toFixed(1)}M).`
+              : `Señal negativa: solo ventas ($${(insiderSellVal/1e6).toFixed(1)}M) sin compras registradas.` },
 
     { id:'04', name:'TAM & Modelo de Negocio',     weight:1.0,
       value:'—', raw:null, pass:null, neutral:false,
